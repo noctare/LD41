@@ -6,6 +6,25 @@
 #include <engine.hpp>
 
 class player_object;
+class game_world;
+
+class world_generator {
+public:
+
+	void generate(int local_x, int local_y, int world_x, int world_y);
+
+	void move_up();
+	void move_left();
+	void move_down();
+	void move_right();
+
+	game_world* world = nullptr;
+	int row = 0;
+	int column = 0;
+	int row_world = 0;
+	int column_world = 0;
+
+};
 
 class tile_chunk {
 public:
@@ -13,18 +32,22 @@ public:
 	struct tile {
 		static const int pixel_size = 16;
 		ne::vector2i uv_index;
-		tile() {
-			uv_index.x = ne::random_int(0, 1);
-		}
 	};
 
-	static const int tiles_per_row = 32;
-	static const int total_tiles = tiles_per_row * tiles_per_row;
+	static const int tiles_per_row = 48;
+	static const int tiles_per_column = 48;
+	static const int total_tiles = tiles_per_row * tiles_per_column;
+	static const int pixel_width = tiles_per_row * tile::pixel_size;
+	static const int pixel_height = tiles_per_column * tile::pixel_size;
+
+	static const bool offset_to_grid = true;
 
 	ne::transform3f transform;
 	ne::texture surface;
 	tile tiles[total_tiles];
 	bool is_dirty = false;
+
+	bool is_open = false;
 
 	tile_chunk();
 	~tile_chunk();
@@ -41,8 +64,9 @@ public:
 class game_world {
 public:
 
-	static const int chunks_per_row = 8;
-	static const int total_chunks = chunks_per_row * chunks_per_row;
+	static const int chunks_per_row = 6;
+	static const int chunks_per_column = 6;
+	static const int total_chunks = chunks_per_row * chunks_per_column;
 
 	tile_chunk chunks[total_chunks];
 
@@ -53,4 +77,9 @@ public:
 	void update();
 	void draw(const ne::transform3f& view);
 
+private:
+
+	world_generator generator;
+
 };
+
