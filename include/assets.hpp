@@ -15,8 +15,12 @@ public:
 	ne::texture player[2];
 	ne::texture blood;
 	ne::texture bullet;
-	ne::texture weapon;
 	ne::texture cursor;
+	ne::texture bones;
+	ne::texture gun[2];
+	ne::texture sword;
+	ne::texture pill;
+	ne::texture injection;
 
 	void initialize();
 
