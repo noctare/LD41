@@ -68,6 +68,8 @@ public:
 
 	tile_chunk* at(int x, int y);
 
+	bool is_free_at(const ne::vector2f& position);
+
 	world_generator generator;
 
 	int previous_chunk_x = 0;

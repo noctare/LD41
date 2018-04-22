@@ -208,6 +208,32 @@ tile_chunk* game_world::at(int x, int y) {
 	return &chunks[y * chunks_per_row + x];
 }
 
+bool game_world::is_free_at(const ne::vector2f& position) {
+	ne::vector2i chunk_index = position.to<int>();
+	chunk_index.x /= tile_chunk::pixel_width;
+	chunk_index.y /= tile_chunk::pixel_height;
+	tile_chunk* chunk = at(chunk_index.x, chunk_index.y);
+	if (!chunk) {
+		return false;
+	}
+	ne::vector2i tile_index = position.to<int>();
+	tile_index.x -= chunk_index.x * tile_chunk::pixel_width;
+	tile_index.y -= chunk_index.y * tile_chunk::pixel_height;
+	tile_index.x -= tile_index.x % tile_chunk::tile_pixel_size;
+	tile_index.y -= tile_index.y % tile_chunk::tile_pixel_size;
+	tile_index.x /= tile_chunk::tile_pixel_size;
+	tile_index.y /= tile_chunk::tile_pixel_size;
+	uint32* tile = chunk->at(tile_index.x, tile_index.y);
+	if (!tile) {
+		NE_ERROR("Invalid tile index " << tile_index);
+		return false;
+	}
+	if (*tile == TILE_WALL) {
+		return false;
+	}
+	return true;
+}
+
 void world_generator::normal(const ne::vector2i& index) {
 	int tile_x = index.x * tile_chunk::tiles_per_row;
 	int tile_y = index.y * tile_chunk::tiles_per_column;
