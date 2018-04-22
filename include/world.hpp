@@ -72,8 +72,5 @@ public:
 
 	world_generator generator;
 
-	int previous_chunk_x = 0;
-	int previous_chunk_y = 0;
-
 };
 

@@ -174,19 +174,6 @@ game_world::game_world() {
 
 void game_world::update() {
 	player.update(this);
-	/*
-	int x = (int)player.transform.position.x / tile_chunk::pixel_width;
-	int y = (int)player.transform.position.y / tile_chunk::pixel_height;
-	int local_x = x % chunks_per_row;
-	int local_y = y % chunks_per_column;
-	while (local_x < 0) {
-		local_x += chunks_per_row;
-	}
-	while (local_y < 0) {
-		local_y += chunks_per_column;
-	}
-	int i = local_y * game_world::chunks_per_row + local_x;
-	*/
 }
 
 void game_world::draw(const ne::transform3f& view) {
