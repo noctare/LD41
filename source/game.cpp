@@ -12,7 +12,7 @@ game_state::game_state() {
 	ne::listen([&](ne::keyboard_key_message key) {
 		if (key.is_pressed && key.key == KEY_Z) {
 			if (camera.zoom > 1.0f) {
-				camera.zoom = 0.5f;
+				camera.zoom = 1.0f;
 			} else {
 				camera.zoom = 4.0f;
 			}
