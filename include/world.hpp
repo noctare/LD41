@@ -42,6 +42,7 @@ public:
 	tile_chunk();
 
 	uint32* at(int x, int y);
+	void render_tile(int type);
 	void render();
 	void draw();
 	void set_index(const ne::vector2i& index);

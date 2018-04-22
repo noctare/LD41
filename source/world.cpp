@@ -43,14 +43,17 @@ uint32* tile_chunk::at(int x, int y) {
 	return &tiles[tiles_per_row * y + x];
 }
 
-void tile_chunk::render() {
+void tile_chunk::render_tile(int type) {
 	if (!shape.exists()) {
 		shape.create();
 	}
 	for (int x = 0; x < tiles_per_row; x++) {
 		for (int y = 0; y < tiles_per_column; y++) {
 			uint32 tile = tiles[y * tiles_per_row + x];
-			
+			if (tile != type) {
+				continue;
+			}
+
 			ne::vector2f position = {
 				(float)(x * tile_pixel_size),
 				(float)(y * tile_pixel_size)
@@ -66,7 +69,7 @@ void tile_chunk::render() {
 			} else if (tile == TILE_WALL) {
 				tile_uv = { 1, 1 };
 			}
-			
+
 			ne::vector2i uv = tile_uv * tile_pixel_size;
 
 			ne::vector2f uv1 = {
@@ -118,6 +121,12 @@ void tile_chunk::render() {
 			shape.append_quad(position, size, uv1, uv2);
 		}
 	}
+}
+
+void tile_chunk::render() {
+	render_tile(TILE_BG_BOTTOM);
+	render_tile(TILE_BG_TOP);
+	render_tile(TILE_WALL);
 	shape.upload();
 }
 
@@ -151,6 +160,9 @@ game_world::game_world() {
 			++index.y;
 			index.x = 0;
 		}
+	}
+	for (auto& i : chunks) {
+		i.render();
 	}
 	player.transform.position.x = (float)(chunks_per_row * tile_chunk::pixel_width) / 2.0f;
 	player.transform.position.y = 256.0f;
@@ -213,5 +225,4 @@ void world_generator::generate(const ne::vector2i& index) {
 		}
 		chunk.tiles[i] = type;
 	}
-	chunk.render();
 }
