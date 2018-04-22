@@ -62,6 +62,7 @@ public:
 	tile_chunk chunks[total_chunks];
 
 	player_object player;
+	std::vector<enemy_object> enemies;
 	std::vector<bullet_object> bullets;
 
 	game_world();
