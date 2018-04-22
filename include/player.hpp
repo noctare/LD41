@@ -10,4 +10,8 @@ public:
 	void update(game_world* world) override;
 	void draw() override;
 
+private:
+
+	int shoot_listener_id = -1;
+
 };

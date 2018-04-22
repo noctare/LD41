@@ -14,11 +14,6 @@ public:
 	ne::transform3f transform;
 	int direction = 0;
 
-	float acceleration = 0.1f;
-	float speed = 0.0f;
-
-	float bounce = 0.0f;
-
 	virtual ~game_object() = default;
 
 	virtual void update(game_world* world);
@@ -32,6 +27,12 @@ public:
 
 protected:
 
+	float bounce = 0.0f;
+	float acceleration = 0.1f;
+	float speed = 0.0f;
+	float max_speed = 2.0f;
+	float slowdown_rate = 0.5f;
+
 	bool w = false;
 	bool a = false;
 	bool s = false;
@@ -42,6 +43,32 @@ protected:
 	bool prev_s = false;
 	bool prev_d = false;
 
+	bool collision_w = false;
+	bool collision_a = false;
+	bool collision_s = false;
+	bool collision_d = false;
+
+	bool affected_by_collision = true;
+
 	void accelerate();
+
+};
+
+class bullet_object : public game_object {
+public:
+
+	bool has_hit_wall = false;
+
+	bullet_object(const ne::transform3f& origin, bool w, bool a, bool s, bool d);
+
+	void update(game_world* world);
+	void draw();
+
+private:
+
+	bool init_w = false;
+	bool init_a = false;
+	bool init_s = false;
+	bool init_d = false;
 
 };

@@ -26,8 +26,8 @@ class tile_chunk {
 public:
 
 	static const int tile_pixel_size = 16;
-	static const int tiles_per_row = 32;
-	static const int tiles_per_column = 32;
+	static const int tiles_per_row = 16;
+	static const int tiles_per_column = 16;
 	static const int total_tiles = tiles_per_row * tiles_per_column;
 	static const int pixel_width = tiles_per_row * tile_pixel_size;
 	static const int pixel_height = tiles_per_column * tile_pixel_size;
@@ -47,19 +47,21 @@ public:
 	void render();
 	void draw();
 	void set_index(const ne::vector2i& index);
+	uint32* tile_at_world_position(const ne::vector2f& position);
 
 };
 
 class game_world {
 public:
 
-	static const int chunks_per_row = 8;
-	static const int chunks_per_column = 8;
+	static const int chunks_per_row = 16;
+	static const int chunks_per_column = 16;
 	static const int total_chunks = chunks_per_row * chunks_per_column;
 
 	tile_chunk chunks[total_chunks];
 
 	player_object player;
+	std::vector<bullet_object> bullets;
 
 	game_world();
 
@@ -67,6 +69,7 @@ public:
 	void draw(const ne::transform3f& view);
 
 	tile_chunk* at(int x, int y);
+	tile_chunk* chunk_at_world_position(const ne::vector2f& position);
 
 	bool is_free_at(const ne::vector2f& position);
 

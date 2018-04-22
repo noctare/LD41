@@ -148,6 +148,17 @@ void tile_chunk::set_index(const ne::vector2i& index) {
 	}
 }
 
+uint32* tile_chunk::tile_at_world_position(const ne::vector2f& position) {
+	ne::vector2i tile_index = position.to<int>();
+	tile_index.x -= index.x * pixel_width;
+	tile_index.y -= index.y * pixel_height;
+	tile_index.x -= tile_index.x % tile_pixel_size;
+	tile_index.y -= tile_index.y % tile_pixel_size;
+	tile_index.x /= tile_pixel_size;
+	tile_index.y /= tile_pixel_size;
+	return at(tile_index.x, tile_index.y);
+}
+
 game_world::game_world() {
 	ne::set_simplex_noise_seed(std::time(nullptr));
 	generator.world = this;
@@ -170,10 +181,28 @@ game_world::game_world() {
 	}
 	player.transform.position.x = (float)(chunks_per_row * tile_chunk::pixel_width) / 2.0f;
 	player.transform.position.y = (float)(chunks_per_column * tile_chunk::pixel_height) / 2.0f;
+	while (!is_free_at(player.transform.position.xy)) {
+		player.transform.position.x += 20.0f;
+	}
 }
 
 void game_world::update() {
 	player.update(this);
+	for (int i = 0; i < (int)bullets.size(); i++) {
+		auto& bullet = bullets[i];
+		bullet.update(this);
+		if (bullet.has_hit_wall) {
+			tile_chunk* chunk = chunk_at_world_position(bullet.transform.position.xy + bullet.transform.scale.xy / 2.0f);
+			if (chunk) {
+				uint32* tile = chunk->tile_at_world_position(bullet.transform.position.xy + bullet.transform.scale.xy / 2.0f);
+				if (tile && *tile == TILE_WALL) {
+					*tile = TILE_BG_TOP;
+				}
+			}
+			bullets.erase(bullets.begin() + i);
+			i--;
+		}
+	}
 }
 
 void game_world::draw(const ne::transform3f& view) {
@@ -186,6 +215,9 @@ void game_world::draw(const ne::transform3f& view) {
 		}
 	}
 	player.draw();
+	for (auto& bullet : bullets) {
+		bullet.draw();
+	}
 }
 
 tile_chunk* game_world::at(int x, int y) {
@@ -195,24 +227,21 @@ tile_chunk* game_world::at(int x, int y) {
 	return &chunks[y * chunks_per_row + x];
 }
 
-bool game_world::is_free_at(const ne::vector2f& position) {
+tile_chunk* game_world::chunk_at_world_position(const ne::vector2f& position) {
 	ne::vector2i chunk_index = position.to<int>();
 	chunk_index.x /= tile_chunk::pixel_width;
 	chunk_index.y /= tile_chunk::pixel_height;
-	tile_chunk* chunk = at(chunk_index.x, chunk_index.y);
+	return at(chunk_index.x, chunk_index.y);
+}
+
+bool game_world::is_free_at(const ne::vector2f& position) {
+	tile_chunk* chunk = chunk_at_world_position(position);
 	if (!chunk) {
 		return false;
 	}
-	ne::vector2i tile_index = position.to<int>();
-	tile_index.x -= chunk_index.x * tile_chunk::pixel_width;
-	tile_index.y -= chunk_index.y * tile_chunk::pixel_height;
-	tile_index.x -= tile_index.x % tile_chunk::tile_pixel_size;
-	tile_index.y -= tile_index.y % tile_chunk::tile_pixel_size;
-	tile_index.x /= tile_chunk::tile_pixel_size;
-	tile_index.y /= tile_chunk::tile_pixel_size;
-	uint32* tile = chunk->at(tile_index.x, tile_index.y);
+	uint32* tile = chunk->tile_at_world_position(position);
 	if (!tile) {
-		NE_ERROR("Invalid tile index " << tile_index);
+		NE_ERROR("No tile at world position " << position);
 		return false;
 	}
 	if (*tile == TILE_WALL) {

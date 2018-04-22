@@ -35,7 +35,8 @@ void game_state::update() {
 
 	debug.set(&fonts.debug, STRING(
 		"Delta " << ne::delta() <<
-		"\nFPS: " << ne::current_fps()
+		"\nFPS: " << ne::current_fps() <<
+		"\nBullets: " << world.bullets.size()
 	));
 }
 

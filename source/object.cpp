@@ -1,8 +1,10 @@
 #include "object.hpp"
 #include "world.hpp"
+#include "assets.hpp"
+#include "game.hpp"
 
 void game_object::update(game_world* world) {
-	speed -= acceleration * 0.5f;
+	speed -= acceleration * slowdown_rate;
 	if (speed < 0.0f) {
 		speed = 0.0f;
 	}
@@ -28,41 +30,57 @@ void game_object::update(game_world* world) {
 }
 
 void game_object::accelerate() {
-	if (speed < 2.0f) {
+	if (speed < max_speed) {
 		speed += acceleration;
 	}
-	if (speed > 2.0f) {
-		speed = 2.0f;
+	if (speed > max_speed) {
+		speed = max_speed;
 	}
 }
 
 void game_object::move_left(game_world* world, float speed) {
 	transform.position.x -= speed;
+	collision_a = false;
 	if (!world->is_free_at(transform.position.xy + ne::vector2f{ 0.0f, 8.0f })) {
-		transform.position.x += speed;
+		if (affected_by_collision) {
+			transform.position.x += speed;
+		}
+		collision_a = true;
 	}
 	direction = DIRECTION_LEFT;
 }
 
 void game_object::move_right(game_world* world, float speed) {
 	transform.position.x += speed;
+	collision_d = false;
 	if (!world->is_free_at(transform.position.xy + ne::vector2f{ transform.scale.width, 8.0f })) {
-		transform.position.x -= speed;
+		if (affected_by_collision) {
+			transform.position.x -= speed;
+		}
+		collision_d = true;
 	}
 	direction = DIRECTION_RIGHT;
 }
 
 void game_object::move_up(game_world* world, float speed) {
 	transform.position.y -= speed;
+	collision_w = false;
 	if (!world->is_free_at(transform.position.xy + ne::vector2f{ 8.0f, 0.0f })) {
-		transform.position.y += speed;
+		if (affected_by_collision) {
+			transform.position.y += speed;
+		}
+		collision_w = true;
 	}
 }
 
 void game_object::move_down(game_world* world, float speed) {
 	transform.position.y += speed;
+	collision_s = false;
 	if (!world->is_free_at(transform.position.xy + ne::vector2f{ 8.0f, transform.scale.height })) {
-		transform.position.y -= speed;
+		if (affected_by_collision) {
+			transform.position.y -= speed;
+		}
+		collision_s = true;
 	}
 }
 
@@ -86,4 +104,34 @@ void game_object::move(game_world* world, bool up, bool left, bool down, bool ri
 	if ((up != down) || (left != right)) {
 		accelerate();
 	}
+}
+
+bullet_object::bullet_object(const ne::transform3f& origin, bool w, bool a, bool s, bool d) {
+	transform.scale.xy = textures.blood.size.to<float>();
+	transform.position.xy = origin.position.xy + origin.scale.xy / 2.0f - transform.scale.xy / 2.0f;
+	init_w = w;
+	init_a = a;
+	init_s = s;
+	init_d = d;
+	acceleration = 0.2f;
+	max_speed = 4.0f;
+	affected_by_collision = false;
+}
+
+void bullet_object::update(game_world* world) {
+	w = init_w;
+	a = init_a;
+	s = init_s;
+	d = init_d;
+	game_object::update(world);
+	if (collision_w || collision_a || collision_s || collision_d) {
+		has_hit_wall = true;
+	}
+}
+
+void bullet_object::draw() {
+	textures.blood.bind();
+	ne::shader::set_transform(&transform);
+	still_quad().bind();
+	still_quad().draw();
 }
