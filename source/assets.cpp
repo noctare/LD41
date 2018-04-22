@@ -67,6 +67,9 @@ void texture_assets::initialize() {
 	load({ &player[0], "player1.png" });
 	load({ &player[1], "player1.png", 1, TEXTURE_FLIP_X });
 	load({ &blood, "bloodcell.png" });
+	load({ &bullet, "normalbullet.png" });
+	load({ &weapon, "deserteagle.png" });
+	load({ &cursor, "cursor.png" });
 
 	spawn_thread();
 	finish();

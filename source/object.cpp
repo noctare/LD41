@@ -162,10 +162,8 @@ void game_object::turn_right(game_world* world, float speed, bool forward) {
 void game_object::move_forward(game_world* world, float speed) {
 	const float delta_x = std::cos(transform.rotation.z) * speed;
 	const float delta_y = -std::sin(transform.rotation.z) * speed;
-
 	transform.position.x += delta_x;
 	transform.position.y += delta_y;
-
 	if (!world->is_free_at(transform.position.xy + transform.scale.xy / 2.0f)) {
 		if (affected_by_collision) {
 			transform.position.x -= delta_x;
@@ -182,36 +180,26 @@ void game_object::move_forward(game_world* world, float speed) {
 			collision_w = true;
 		}
 	}
-
-	//transform.position.x += std::cos(transform.rotation.z) * speed;
-	//transform.position.y -= std::sin(transform.rotation.z) * speed;
 }
 
-bullet_object::bullet_object(const ne::transform3f& origin, bool w, bool a, bool s, bool d) {
-	transform.scale.xy = textures.blood.size.to<float>();
+bullet_object::bullet_object(const ne::transform3f& origin, float angle) {
+	transform.scale.xy = textures.bullet.size.to<float>();
 	transform.position.xy = origin.position.xy + origin.scale.xy / 2.0f - transform.scale.xy / 2.0f;
-	init_w = w;
-	init_a = a;
-	init_s = s;
-	init_d = d;
-	acceleration = 0.2f;
-	max_speed = 4.0f;
+	transform.rotation.z = angle;
 	affected_by_collision = false;
+	move_directions = MOVE_DIRECTIONS_360;
 }
 
 void bullet_object::update(game_world* world) {
-	w = init_w;
-	a = init_a;
-	s = init_s;
-	d = init_d;
 	game_object::update(world);
+	move_forward(world, 6.0f);
 	if (collision_w || collision_a || collision_s || collision_d) {
 		has_hit_wall = true;
 	}
 }
 
 void bullet_object::draw() {
-	textures.blood.bind();
+	textures.bullet.bind();
 	ne::shader::set_transform(&transform);
 	still_quad().bind();
 	still_quad().draw();

@@ -78,17 +78,10 @@ public:
 
 	bool has_hit_wall = false;
 
-	bullet_object(const ne::transform3f& origin, bool w, bool a, bool s, bool d);
+	bullet_object(const ne::transform3f& origin, float angle);
 
 	void update(game_world* world);
 	void draw();
-
-private:
-
-	bool init_w = false;
-	bool init_a = false;
-	bool init_s = false;
-	bool init_d = false;
 
 };
 

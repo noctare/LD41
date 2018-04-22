@@ -14,9 +14,10 @@ public:
 	void update(game_world* world) override;
 	void draw() override;
 
+	void shoot(game_world* world);
+
 private:
 
-	int shoot_listener_id = -1;
 	ne::timer last_shot;
 
 };
