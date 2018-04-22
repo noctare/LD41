@@ -11,6 +11,8 @@ game_state::game_state() {
 
 	world.game = this;
 
+	ne::hide_mouse();
+
 	ne::listen([&](ne::keyboard_key_message key) {
 		if (key.is_pressed && key.key == KEY_Z) {
 			if (camera.zoom > 1.0f) {
@@ -43,9 +45,7 @@ void game_state::update() {
 
 	debug.set(&fonts.debug, STRING(
 		"Delta " << ne::delta() <<
-		"\nFPS: " << ne::current_fps() <<
-		"\nBullets: " << world.bullets.size() <<
-		"\nAngle: " << world.player.transform.angle_to(camera.mouse())
+		"\nFPS: " << ne::current_fps()
 	));
 }
 

@@ -269,6 +269,17 @@ void game_world::draw(const ne::transform3f& view) {
 	for (auto& bullet : bullets) {
 		bullet.draw();
 	}
+	// Draw cursor:
+	ne::vector2i mouse = game->camera.mouse().to<int>();
+	//mouse.x -= mouse.x % tile_chunk::tile_pixel_size;
+	//mouse.y -= mouse.y % tile_chunk::tile_pixel_size;
+	ne::transform3f cursor;
+	cursor.position.xy = mouse.to<float>();
+	cursor.scale.xy = textures.cursor.size.to<float>();
+	ne::shader::set_transform(&cursor);
+	textures.cursor.bind();
+	still_quad().bind();
+	still_quad().draw();
 }
 
 tile_chunk* game_world::at(int x, int y) {
