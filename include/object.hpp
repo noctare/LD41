@@ -51,6 +51,7 @@ protected:
 	float min_angle_speed = 0.05f;
 	float max_angle_speed = 0.08f;
 	float angle_turn_speed_divider = 10.0f;
+	float angle_to_mouse = 0.0f;
 
 	bool w = false;
 	bool a = false;

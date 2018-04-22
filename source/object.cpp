@@ -4,6 +4,7 @@
 #include "game.hpp"
 
 void game_object::update(game_world* world) {
+	angle_to_mouse = ne::deg_to_rad(transform.angle_to(world->game->camera.mouse()));
 	speed -= acceleration * slowdown_rate;
 	if (speed < 0.0f) {
 		speed = 0.0f;

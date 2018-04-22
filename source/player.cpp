@@ -20,6 +20,8 @@ void player_object::update(game_world* world) {
 	s = (ne::is_key_down(KEY_S) || ne::is_key_down(KEY_DOWN));
 	d = (ne::is_key_down(KEY_D) || ne::is_key_down(KEY_RIGHT));
 	game_object::update(world);
+	float angle = ne::rad_to_deg(angle_to_mouse);
+	direction = (angle > 90.0f && angle < 270.0f) ? 1 : 0;
 }
 
 void player_object::draw() {
@@ -33,14 +35,33 @@ void player_object::draw() {
 	ne::shader::set_transform(&draw_transform);
 	still_quad().bind();
 	still_quad().draw();
+
+	float angle = ne::rad_to_deg(angle_to_mouse);
+	if (angle > 90.0f && angle < 270.0f) {
+		angle -= 180.0f;
+	}
+	draw_transform.position.x += 12.0f * (direction == DIRECTION_RIGHT ? -1.0f : 1.3f);
+	draw_transform.position.y += 2.0f;
+	draw_transform.scale.xy = textures.gun[0].size.to<float>();
+	draw_transform.rotation.z = ne::deg_to_rad(angle);
+	ne::shader::set_transform(&draw_transform);
+	textures.gun[direction].bind();
+	still_quad().draw();
 }
 
 void player_object::shoot(game_world* world) {
 	if (last_shot.milliseconds() < 250) {
 		return;
 	}
-	ne::vector2f mouse = world->game->camera.mouse();
-	float angle = transform.angle_to(mouse);
-	world->bullets.push_back({ transform, ne::deg_to_rad(angle) });
+
+	ne::transform3f origin = transform;
+	origin.position.x += 12.0f * (direction == DIRECTION_RIGHT ? -1.0f : 1.3f);
+	origin.position.y += 2.0f;
+	origin.position.y -= bounce;
+	origin.position.x -= bounce / 8.0f;
+	origin.position.y -= bounce / 8.0f;
+	origin.scale.xy = textures.gun[0].size.to<float>();
+
+	world->bullets.push_back({ origin, angle_to_mouse });
 	last_shot.start();
 }

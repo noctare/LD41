@@ -64,12 +64,17 @@ void texture_assets::initialize() {
 	load({ &blank, "blank.png" });
 	load({ &button, "button.png", 3 });
 	load({ &tiles, "tiles.png", 1, TEXTURE_PIXELS_IN_MEMORY });
-	load({ &player[0], "player1.png" });
-	load({ &player[1], "player1.png", 1, TEXTURE_FLIP_X });
+	load({ &player[0], "player1.png", 1, TEXTURE_FLIP_X });
+	load({ &player[1], "player1.png" });
 	load({ &blood, "bloodcell.png" });
 	load({ &bullet, "normalbullet.png" });
-	load({ &weapon, "deserteagle.png" });
 	load({ &cursor, "cursor.png" });
+	load({ &bones, "bones.png", 3 });
+	load({ &gun[0], "deserteagle.png" });
+	load({ &gun[1], "deserteagle.png", 1, TEXTURE_FLIP_X });
+	load({ &sword, "oldsword.png" });
+	load({ &pill, "pill.png" });
+	load({ &injection, "injection.png" });
 
 	spawn_thread();
 	finish();
