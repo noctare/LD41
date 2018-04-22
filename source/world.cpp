@@ -155,7 +155,11 @@ game_world::game_world() {
 	for (auto& i : chunks) {
 		i.world = this;
 		i.set_index(index);
-		generator.generate(i.index);
+		if (index.x == 0 || index.x == chunks_per_row - 1 || index.y == 0 || index.y == chunks_per_column - 1) {
+			generator.border(i.index);
+		} else {
+			generator.normal(i.index);
+		}
 		if (++index.x % chunks_per_row == 0) {
 			++index.y;
 			index.x = 0;
@@ -165,7 +169,7 @@ game_world::game_world() {
 		i.render();
 	}
 	player.transform.position.x = (float)(chunks_per_row * tile_chunk::pixel_width) / 2.0f;
-	player.transform.position.y = 256.0f;
+	player.transform.position.y = (float)(chunks_per_column * tile_chunk::pixel_height) / 2.0f;
 }
 
 void game_world::update() {
@@ -204,7 +208,7 @@ tile_chunk* game_world::at(int x, int y) {
 	return &chunks[y * chunks_per_row + x];
 }
 
-void world_generator::generate(const ne::vector2i& index) {
+void world_generator::normal(const ne::vector2i& index) {
 	int tile_x = index.x * tile_chunk::tiles_per_row;
 	int tile_y = index.y * tile_chunk::tiles_per_column;
 	size_t chunk_index = index.y * game_world::chunks_per_row + index.x;
@@ -215,14 +219,32 @@ void world_generator::generate(const ne::vector2i& index) {
 	for (int i = 0; i < tile_chunk::total_tiles; i++) {
 		int x = i % tile_chunk::tiles_per_row;
 		int y = i / tile_chunk::tiles_per_row;
+		float noise1 = ne::octave_noise(3, 0.7f, 0.01f, tile_x + x, tile_y + y);
 		int type = TILE_WALL;
-		//float noise = ne::octave_noise(3.0f, 0.5f, 0.006f, tile_x + x, tile_y + y);
-		float noise = ne::octave_noise(1.0f, 0.9f, 0.02f, tile_x + x, tile_y + y);
-		if (noise > 0.6f) {
-			type = TILE_BG_BOTTOM;
-		} else if (noise > 0.0f) {
+		if (noise1 > 0.0f) {
 			type = TILE_BG_TOP;
+
+			float noise2 = ne::octave_noise(5, 0.8f, 0.005f, tile_x + x, tile_y + y);
+			float noise3 = ne::octave_noise(5, 0.8f, 0.005f, -128000 + tile_x + x, -128000 + tile_y + y);
+			if (noise2 > 0.4f) {
+				type = TILE_BG_BOTTOM;
+			}
+			if (noise2 > 0.35f && noise3 > 0.35f) {
+				type = TILE_WALL;
+			}
+
 		}
 		chunk.tiles[i] = type;
+	}
+}
+
+void world_generator::border(const ne::vector2i& index) {
+	size_t chunk_index = index.y * game_world::chunks_per_row + index.x;
+	if (chunk_index >= world->total_chunks) {
+		return;
+	}
+	tile_chunk& chunk = world->chunks[chunk_index];
+	for (int i = 0; i < tile_chunk::total_tiles; i++) {
+		chunk.tiles[i] = TILE_WALL;
 	}
 }

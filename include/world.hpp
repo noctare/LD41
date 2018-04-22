@@ -15,7 +15,8 @@ class game_world;
 class world_generator {
 public:
 
-	void generate(const ne::vector2i& index);
+	void normal(const ne::vector2i& index);
+	void border(const ne::vector2i& index);
 
 	game_world* world = nullptr;
 
@@ -52,8 +53,8 @@ public:
 class game_world {
 public:
 
-	static const int chunks_per_row = 4;
-	static const int chunks_per_column = 4;
+	static const int chunks_per_row = 8;
+	static const int chunks_per_column = 8;
 	static const int total_chunks = chunks_per_row * chunks_per_column;
 
 	tile_chunk chunks[total_chunks];

@@ -12,7 +12,7 @@ public:
 	ne::texture blank;
 	ne::texture button;
 	ne::texture tiles;
-	ne::texture player;
+	ne::texture player[2];
 
 	void initialize();
 

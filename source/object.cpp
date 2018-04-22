@@ -1,13 +1,17 @@
 #include "object.hpp"
 
+void game_object::update(game_world* world) {
+	speed -= acceleration * 0.5f;
+	if (speed < 0.0f) {
+		speed = 0.0f;
+	}
+}
+
 void game_object::accelerate() {
-	acceleration -= acceleration_rate / 2.0f;
-	if (acceleration > acceleration_limit) {
-		acceleration = acceleration_limit;
+	if (speed < 2.0f) {
+		speed += acceleration;
 	}
-	if (acceleration < 0.0f) {
-		acceleration = 0.0f;
+	if (speed > 2.0f) {
+		speed = 2.0f;
 	}
-	transform.position.x += std::cos(transform.rotation.z) * acceleration;
-	transform.position.y -= std::sin(transform.rotation.z) * acceleration;
 }

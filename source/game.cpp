@@ -7,8 +7,17 @@
 game_state::game_state() {
 	camera.target_chase_aspect.y = 1.5f;
 	camera.target_chase_speed = { 0.25f, 0.5f };
-	camera.zoom = 0.5f;
 	camera.zoom = 4.0f;
+
+	ne::listen([&](ne::keyboard_key_message key) {
+		if (key.is_pressed && key.key == KEY_Z) {
+			if (camera.zoom > 1.0f) {
+				camera.zoom = 0.5f;
+			} else {
+				camera.zoom = 4.0f;
+			}
+		}
+	});
 }
 
 game_state::~game_state() {

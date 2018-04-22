@@ -64,7 +64,8 @@ void texture_assets::initialize() {
 	load({ &blank, "blank.png" });
 	load({ &button, "button.png", 3 });
 	load({ &tiles, "tiles.png", 1, TEXTURE_PIXELS_IN_MEMORY });
-	load({ &player, "player1.png" });
+	load({ &player[0], "player1.png" });
+	load({ &player[1], "player1.png", 1, TEXTURE_FLIP_X });
 
 	spawn_thread();
 	finish();
