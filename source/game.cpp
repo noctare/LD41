@@ -9,6 +9,8 @@ game_state::game_state() {
 	camera.target_chase_speed = { 0.25f, 0.25f };
 	camera.zoom = 4.0f;
 
+	world.game = this;
+
 	ne::listen([&](ne::keyboard_key_message key) {
 		if (key.is_pressed && key.key == KEY_Z) {
 			if (camera.zoom > 1.0f) {
@@ -42,7 +44,8 @@ void game_state::update() {
 	debug.set(&fonts.debug, STRING(
 		"Delta " << ne::delta() <<
 		"\nFPS: " << ne::current_fps() <<
-		"\nBullets: " << world.bullets.size()
+		"\nBullets: " << world.bullets.size() <<
+		"\nAngle: " << world.player.transform.angle_to(camera.mouse())
 	));
 }
 

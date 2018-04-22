@@ -14,6 +14,9 @@ public:
 	ne::texture tiles;
 	ne::texture player[2];
 	ne::texture blood;
+	ne::texture bullet;
+	ne::texture weapon;
+	ne::texture cursor;
 
 	void initialize();
 

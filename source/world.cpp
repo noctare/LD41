@@ -188,6 +188,29 @@ game_world::game_world() {
 
 void game_world::update() {
 	player.update(this);
+	for (int i = 0; i < (int)enemies.size(); i++) {
+		auto& enemy = enemies[i];
+		enemy.update(this);
+		if (enemy.transform.distance_to(player.transform) > 512.0f) {
+			enemies.erase(enemies.begin() + i);
+			i--;
+		}
+	}
+	if (enemies.size() < 10) {
+		tile_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
+		if (player_chunk) {
+			int x = -1;
+			int y = -1;
+			do {
+				x = ne::random_int(0, tile_chunk::tiles_per_row - 1);
+				y = ne::random_int(0, tile_chunk::tiles_per_column - 1);
+			} while (player_chunk->tiles[y * tile_chunk::tiles_per_row + x] == TILE_WALL);
+			enemies.push_back({});
+			enemies.back().transform.position.xy = player_chunk->transform.position.xy;
+			enemies.back().transform.position.x += (float)x * (float)tile_chunk::tile_pixel_size;
+			enemies.back().transform.position.y += (float)y * (float)tile_chunk::tile_pixel_size;
+		}
+	}
 	for (int i = 0; i < (int)bullets.size(); i++) {
 		auto& bullet = bullets[i];
 		bullet.update(this);
@@ -240,6 +263,9 @@ void game_world::draw(const ne::transform3f& view) {
 		}
 	}
 	player.draw();
+	for (auto& enemy : enemies) {
+		enemy.draw();
+	}
 	for (auto& bullet : bullets) {
 		bullet.draw();
 	}
@@ -286,20 +312,18 @@ void world_generator::normal(const ne::vector2i& index) {
 	for (int i = 0; i < tile_chunk::total_tiles; i++) {
 		int x = i % tile_chunk::tiles_per_row;
 		int y = i / tile_chunk::tiles_per_row;
-		float noise1 = ne::octave_noise(3, 0.7f, 0.01f, tile_x + x, tile_y + y);
+		float noise1 = ne::octave_noise(4, 0.35f, 0.05f, tile_x + x, tile_y + y);
 		int type = TILE_WALL;
 		if (noise1 > 0.0f) {
 			type = TILE_BG_TOP;
-
-			float noise2 = ne::octave_noise(5, 0.8f, 0.005f, tile_x + x, tile_y + y);
-			float noise3 = ne::octave_noise(5, 0.8f, 0.005f, -128000 + tile_x + x, -128000 + tile_y + y);
+			float noise2 = ne::octave_noise(4, 0.6f, 0.05f, tile_x + x, tile_y + y);
+			float noise3 = ne::octave_noise(4, 0.5f, 0.05f, -128000 + tile_x + x, -128000 + tile_y + y);
 			if (noise2 > 0.4f) {
 				type = TILE_BG_BOTTOM;
 			}
 			if (noise2 > 0.35f && noise3 > 0.35f) {
 				type = TILE_WALL;
 			}
-
 		}
 		chunk.tiles[i] = type;
 	}

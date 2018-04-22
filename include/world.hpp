@@ -11,6 +11,7 @@
 
 class player_object;
 class game_world;
+class game_state;
 
 class world_generator {
 public:
@@ -59,9 +60,12 @@ public:
 	static const int chunks_per_column = 16;
 	static const int total_chunks = chunks_per_row * chunks_per_column;
 
+	game_state* game = nullptr;
+
 	tile_chunk chunks[total_chunks];
 
 	player_object player;
+	std::vector<enemy_object> enemies;
 	std::vector<bullet_object> bullets;
 
 	game_world();
