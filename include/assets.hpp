@@ -13,6 +13,7 @@ public:
 	ne::texture button;
 	ne::texture tiles;
 	ne::texture player[2];
+	ne::texture blood;
 
 	void initialize();
 

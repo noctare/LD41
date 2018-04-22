@@ -26,8 +26,8 @@ class tile_chunk {
 public:
 
 	static const int tile_pixel_size = 16;
-	static const int tiles_per_row = 64;
-	static const int tiles_per_column = 64;
+	static const int tiles_per_row = 32;
+	static const int tiles_per_column = 32;
 	static const int total_tiles = tiles_per_row * tiles_per_column;
 	static const int pixel_width = tiles_per_row * tile_pixel_size;
 	static const int pixel_height = tiles_per_column * tile_pixel_size;
