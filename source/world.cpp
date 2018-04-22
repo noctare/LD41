@@ -8,70 +8,131 @@
 #include <simplex_noise.hpp>
 
 tile_chunk::tile_chunk() {
-	transform.scale.xy = { (float)pixel_width, (float)pixel_height };
-	surface.create();
-	surface.parameters.are_pixels_in_memory = true;
-	surface.size = { pixel_width, pixel_height };
-	surface.pixels = new uint32[surface.size.width * surface.size.height];
-	memset(surface.pixels, 0xFFFFFFFF, sizeof(uint32) * surface.size.width * surface.size.height);
-	surface.render();
+	transform.scale.xy = 1.0f;
 }
 
-tile_chunk::~tile_chunk() {
-	surface.destroy();
+uint32* tile_chunk::at(int x, int y) {
+	if (x < 0 || y < 0 || x >= tiles_per_row || y >= tiles_per_column) {
+		ne::vector2i offset;
+		if (x < 0) {
+			offset.x = -1;
+		} else if (x >= tiles_per_row) {
+			offset.x = 1;
+		}
+		if (y < 0) {
+			offset.y = -1;
+		} else if (y >= tiles_per_column) {
+			offset.y = 1;
+		}
+		tile_chunk* next = world->at(index.x + offset.x, index.y + offset.y);
+		if (!next) {
+			return nullptr;
+		}
+		if (offset.x == 1) {
+			x -= tiles_per_row;
+		} else if (offset.x == -1) {
+			x += tiles_per_row;
+		}
+		if (offset.y == 1) {
+			y -= tiles_per_column;
+		} else if (offset.y == -1) {
+			y += tiles_per_column;
+		}
+		return next->at(x, y);
+	}
+	return &tiles[tiles_per_row * y + x];
 }
 
-void tile_chunk::render(const ne::vector2i& position, ne::texture* source, const ne::vector2i& offset, const ne::vector2i& size) {
-	const size_t surface_size = surface.size.width * surface.size.height;
-	for (int y = 0; y < size.y; y++) {
-		for (int x = 0; x < size.x; x++) {
-			const uint32 value = source->pixels[(offset.y + y) * source->size.width + offset.x + x];
-			if (((value & 0xFF000000) >> 24) == 0x00000000) {
-				continue;
+void tile_chunk::render() {
+	if (!shape.exists()) {
+		shape.create();
+	}
+	for (int x = 0; x < tiles_per_row; x++) {
+		for (int y = 0; y < tiles_per_column; y++) {
+			uint32 tile = tiles[y * tiles_per_row + x];
+			
+			ne::vector2f position = {
+				(float)(x * tile_pixel_size),
+				(float)(y * tile_pixel_size)
+			};
+
+			ne::vector2f size = (float)tile_pixel_size;
+
+			ne::vector2i tile_uv;
+			if (tile == TILE_BG_BOTTOM) {
+				tile_uv = { 7, 1 };
+			} else if (tile == TILE_BG_TOP) {
+				tile_uv = { 4, 1 };
+			} else if (tile == TILE_WALL) {
+				tile_uv = { 1, 1 };
 			}
-			const size_t index = (position.y + y) * surface.size.width + position.x + x;
-			if (index >= surface_size) {
-				continue;
+			
+			ne::vector2i uv = tile_uv * tile_pixel_size;
+
+			ne::vector2f uv1 = {
+				(float)uv.x / (float)textures.tiles.size.width,
+				(float)uv.y / (float)textures.tiles.size.height
+			};
+
+			float step_x = size.x / (float)textures.tiles.size.width;
+			float step_y = size.y / (float)textures.tiles.size.height;
+
+			if (tile != TILE_BG_BOTTOM) {
+
+				uint32* up = at(x, y - 1);
+				uint32* down = at(x, y + 1);
+				uint32* left = at(x - 1, y);
+				uint32* right = at(x + 1, y);
+
+				if (up && *up != tile) {
+					uv1.y -= step_y / 4.0f;
+					step_y += step_y / 4.0f;
+					position.y -= 4.0f; // 16 / 4
+					size.y += 4.0f;
+				}
+
+				if (down && *down != tile) {
+					step_y += step_y / 4.0f;
+					size.y += 4.0f; // 16 / 4
+				}
+
+				if (left && *left != tile) {
+					uv1.x -= step_x / 4.0f;
+					step_x += step_x / 4.0f;
+					position.x -= 4.0f; // 16 / 4
+					size.x += 4.0f;
+				}
+
+				if (right && *right != tile) {
+					step_x += step_x / 4.0f;
+					size.x += 4.0f; // 16 / 4
+				}
+
 			}
-			surface.pixels[index] = value;
+
+			ne::vector2f uv2 = {
+				uv1.x + step_x,
+				uv1.y + step_y
+			};
+
+			shape.append_quad(position, size, uv1, uv2);
 		}
 	}
-	is_dirty = true;
-}
-
-void tile_chunk::render(const ne::vector2i& position, const tile& tile) {
-	render(position, &textures.tiles, tile.uv_index * tile::pixel_size, tile::pixel_size);
-}
-
-void tile_chunk::render(const ne::vector2i& position, ne::texture* source) {
-	render(position, source, 0, source->size);
-}
-
-void tile_chunk::render_tiles() {
-	for (int y = 0; y < tiles_per_row; y++) {
-		for (int x = 0; x < tiles_per_column; x++) {
-			render({ x * tile::pixel_size, y * tile::pixel_size }, tiles[y * tiles_per_row + x]);
-		}
-	}
+	shape.upload();
 }
 
 void tile_chunk::draw() {
-	surface.bind();
-	if (is_dirty) {
-		surface.refresh();
-		is_dirty = false;
+	if (!shape.exists()) {
+		return;
 	}
 	ne::shader::set_transform(&transform);
-	if (is_open) {
-		ne::shader::set_color(0.5f, 0.0f, 1.0f, 1.0f);
-	} else {
-		ne::shader::set_color(1.0f);
-	}
-	still_quad().draw();
+	shape.bind();
+	shape.draw();
 }
 
 void tile_chunk::set_index(const ne::vector2i& index) {
-	transform.position.xy = index.to<float>() * transform.scale.xy;
+	this->index = index;
+	transform.position.xy = (index * ne::vector2i{ pixel_width, pixel_height }).to<float>();
 	if (offset_to_grid) {
 		transform.position.x += (float)index.x * 8.0f;
 		transform.position.y += (float)index.y * 8.0f;
@@ -79,101 +140,78 @@ void tile_chunk::set_index(const ne::vector2i& index) {
 }
 
 game_world::game_world() {
-	generator.world = this;
 	ne::set_simplex_noise_seed(std::time(nullptr));
-	for (int i = 0; i < game_world::chunks_per_row; i++) {
-		generator.move_up();
+	generator.world = this;
+	ne::vector2i index;
+	for (auto& i : chunks) {
+		i.world = this;
+		i.set_index(index);
+		generator.generate(i.index);
+		if (++index.x % chunks_per_row == 0) {
+			++index.y;
+			index.x = 0;
+		}
 	}
 	player.transform.position.x = (float)(chunks_per_row * tile_chunk::pixel_width) / 2.0f;
-	player.transform.position.y = -1000.0f;
+	player.transform.position.y = 256.0f;
 }
 
 void game_world::update() {
 	player.update(this);
-	static int prev = -1;
-	if (prev != -1) {
-		chunks[prev].is_open = false;
-	}
+	/*
 	int x = (int)player.transform.position.x / tile_chunk::pixel_width;
 	int y = (int)player.transform.position.y / tile_chunk::pixel_height;
-	y--;
-	y = -y;
-	int i = y * game_world::chunks_per_row + x;
-	if (i < total_chunks && i >= 0) {
-		chunks[i].is_open = true;
-		if (i != prev) {
-			generator.move_up();
-		}
-		prev = i;
-	} else {
-		prev = -1;
+	int local_x = x % chunks_per_row;
+	int local_y = y % chunks_per_column;
+	while (local_x < 0) {
+		local_x += chunks_per_row;
 	}
+	while (local_y < 0) {
+		local_y += chunks_per_column;
+	}
+	int i = local_y * game_world::chunks_per_row + local_x;
+	*/
 }
 
 void game_world::draw(const ne::transform3f& view) {
+	textures.tiles.bind();
+	ne::shader::set_color(1.0f);
+	ne::vector2f chunk_pixel_size = { (float)tile_chunk::pixel_width, (float)tile_chunk::pixel_height };
 	for (auto& chunk : chunks) {
-		chunk.draw();
+		if (view.collides_with(chunk.transform.position.xy, chunk_pixel_size)) {
+			chunk.draw();
+		}
 	}
 	player.draw();
 }
 
-void world_generator::generate(int local_x, int local_y, int world_x, int world_y) {
-	int tile_world_x = world_x * tile_chunk::tiles_per_row;
-	int tile_world_y = world_y * tile_chunk::tiles_per_column;
-	tile_chunk& chunk = world->chunks[local_y * game_world::chunks_per_row + local_x];
+tile_chunk* game_world::at(int x, int y) {
+	if (x < 0 || y < 0 || x >= chunks_per_row || y >= chunks_per_column) {
+		return nullptr;
+	}
+	return &chunks[y * chunks_per_row + x];
+}
+
+void world_generator::generate(const ne::vector2i& index) {
+	int tile_x = index.x * tile_chunk::tiles_per_row;
+	int tile_y = index.y * tile_chunk::tiles_per_column;
+	size_t chunk_index = index.y * game_world::chunks_per_row + index.x;
+	if (chunk_index >= world->total_chunks) {
+		return;
+	}
+	tile_chunk& chunk = world->chunks[chunk_index];
 	for (int i = 0; i < tile_chunk::total_tiles; i++) {
 		int x = i % tile_chunk::tiles_per_row;
 		int y = i / tile_chunk::tiles_per_row;
-		int type = 0;
-		//float noise = ne::octave_noise(3.0f, 0.5f, 0.006f, tile_world_x + x, tile_world_y + y);
-		float noise = ne::octave_noise(1.0f, 0.9f, 0.006f, tile_world_x + x, tile_world_y + y);
+		int type = TILE_WALL;
+		//float noise = ne::octave_noise(3.0f, 0.5f, 0.006f, tile_x + x, tile_y + y);
+		float noise = ne::octave_noise(1.0f, 0.9f, 0.02f, tile_x + x, tile_y + y);
 		if (noise > 0.6f) {
-			type = 2;
+			type = TILE_BG_BOTTOM;
 		} else if (noise > 0.0f) {
-			type = 1;
+			type = TILE_BG_TOP;
 		}
-		chunk.tiles[i].uv_index.x = type;
+		chunk.tiles[i] = type;
 	}
-	chunk.set_index({ world_x, world_y });
-	chunk.render_tiles();
-}
-
-void world_generator::move_up() {
-	for (int i = 0; i < game_world::chunks_per_row; i++) {
-		generate(i, row, column_world + i, row_world);
-	}
-	if (++row >= game_world::chunks_per_column) {
-		row = 0;
-	}
-	--row_world;
-}
-
-void world_generator::move_left() {
-	for (int i = 0; i < game_world::chunks_per_column; i++) {
-		generate(column, i, column_world, row_world + i);
-	}
-	if (++column >= game_world::chunks_per_row) {
-		column = 0;
-	}
-	++column_world;
-}
-
-void world_generator::move_down() {
-	for (int i = 0; i < game_world::chunks_per_row; i++) {
-		generate(i, row, column_world + i, row_world);
-	}
-	if (--row < 0) {
-		row = game_world::chunks_per_column - 1;
-	}
-	++row_world;
-}
-
-void world_generator::move_right() {
-	for (int i = 0; i < game_world::chunks_per_column; i++) {
-		generate(column, i, column_world, row_world + i);
-	}
-	if (--column < 0) {
-		column = game_world::chunks_per_row - 1;
-	}
-	--column_world;
+	chunk.render();
 }

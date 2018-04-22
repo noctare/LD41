@@ -8,6 +8,7 @@ game_state::game_state() {
 	camera.target_chase_aspect.y = 1.5f;
 	camera.target_chase_speed = { 0.25f, 0.5f };
 	camera.zoom = 0.5f;
+	camera.zoom = 4.0f;
 }
 
 game_state::~game_state() {

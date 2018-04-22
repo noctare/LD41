@@ -12,8 +12,8 @@ public:
 
 	float acceleration = 0.0f;
 	float acceleration_rate = 0.4f;
-	float acceleration_limit = 9.0f;
-	ne::vector2f speed = 6.0f;
+	float acceleration_limit = 6.0f;
+	ne::vector2f speed = 4.0f;
 
 	float min_angle_speed = 0.05f;
 	float max_angle_speed = 0.08f;

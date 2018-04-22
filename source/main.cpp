@@ -29,7 +29,7 @@ void start() {
 	// TODO: Ensure this is set to 'sync' on releases.
 	ne::set_swap_interval(ne::swap_interval::immediate);
 	//ne::set_swap_interval(ne::swap_interval::sync);
-	ne::set_update_sync(true);
+	ne::set_update_sync(false);
 
 	// Start the game.
 	ne::swap_state<menu_state>();
@@ -40,6 +40,6 @@ void stop() {
 }
 
 int main(int argc, char** argv) {
-	ne::start_engine("Ludum Dare 41", 800, 600);
+	ne::start_engine("Bloody Battle", 800, 600);
 	return ne::enter_loop(start, stop);
 }
