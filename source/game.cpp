@@ -18,6 +18,8 @@ game_state::game_state() {
 			}
 		}
 	});
+
+	score_label.font = &fonts.hud;
 }
 
 game_state::~game_state() {
@@ -32,6 +34,10 @@ void game_state::update() {
 	camera.update();
 
 	world.update();
+
+	score_label.render(STRING("Score: " << world.player.score));
+	score_label.transform.position.x = ui_camera.x() + ui_camera.width() / 2.0f - score_label.transform.scale.width / 2.0f;
+	score_label.transform.position.y = ui_camera.y() + 16.0f;
 
 	debug.set(&fonts.debug, STRING(
 		"Delta " << ne::delta() <<
@@ -56,6 +62,7 @@ void game_state::draw() {
 	view.scale.xy = ui_camera.size();
 	ne::shader::set_color(1.0f);
 	still_quad().bind();
+	score_label.draw();
 	debug.draw(view);
 }
 

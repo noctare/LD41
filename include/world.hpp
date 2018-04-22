@@ -39,6 +39,7 @@ public:
 	uint32 tiles[total_tiles];
 	ne::drawing_shape shape;
 	ne::vector2i index;
+	bool needs_rendering = true;
 
 	tile_chunk();
 
@@ -47,7 +48,7 @@ public:
 	void render();
 	void draw();
 	void set_index(const ne::vector2i& index);
-	uint32* tile_at_world_position(const ne::vector2f& position);
+	std::pair<uint32*, ne::vector2i> tile_at_world_position(const ne::vector2f& position);
 
 };
 

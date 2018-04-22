@@ -9,6 +9,8 @@
 class game_state : public ne::program_state {
 public:
 
+	ne::font_text score_label;
+
 	ne::ortho_camera camera;
 	ne::ortho_camera ui_camera;
 	game_world world;

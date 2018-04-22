@@ -44,9 +44,6 @@ uint32* tile_chunk::at(int x, int y) {
 }
 
 void tile_chunk::render_tile(int type) {
-	if (!shape.exists()) {
-		shape.create();
-	}
 	for (int x = 0; x < tiles_per_row; x++) {
 		for (int y = 0; y < tiles_per_column; y++) {
 			uint32 tile = tiles[y * tiles_per_row + x];
@@ -81,7 +78,6 @@ void tile_chunk::render_tile(int type) {
 			float step_y = size.y / (float)textures.tiles.size.height;
 
 			if (tile != TILE_BG_BOTTOM) {
-
 				uint32* up = at(x, y - 1);
 				uint32* down = at(x, y + 1);
 				uint32* left = at(x - 1, y);
@@ -110,7 +106,6 @@ void tile_chunk::render_tile(int type) {
 					step_x += step_x / 4.0f;
 					size.x += 4.0f; // 16 / 4
 				}
-
 			}
 
 			ne::vector2f uv2 = {
@@ -124,15 +119,20 @@ void tile_chunk::render_tile(int type) {
 }
 
 void tile_chunk::render() {
+	if (shape.exists()) {
+		shape.destroy();
+	}
+	shape.create();
 	render_tile(TILE_BG_BOTTOM);
 	render_tile(TILE_BG_TOP);
 	render_tile(TILE_WALL);
 	shape.upload();
+	needs_rendering = false;
 }
 
 void tile_chunk::draw() {
-	if (!shape.exists()) {
-		return;
+	if (needs_rendering) {
+		render();
 	}
 	ne::shader::set_transform(&transform);
 	shape.bind();
@@ -148,7 +148,7 @@ void tile_chunk::set_index(const ne::vector2i& index) {
 	}
 }
 
-uint32* tile_chunk::tile_at_world_position(const ne::vector2f& position) {
+std::pair<uint32*, ne::vector2i> tile_chunk::tile_at_world_position(const ne::vector2f& position) {
 	ne::vector2i tile_index = position.to<int>();
 	tile_index.x -= index.x * pixel_width;
 	tile_index.y -= index.y * pixel_height;
@@ -156,7 +156,7 @@ uint32* tile_chunk::tile_at_world_position(const ne::vector2f& position) {
 	tile_index.y -= tile_index.y % tile_pixel_size;
 	tile_index.x /= tile_pixel_size;
 	tile_index.y /= tile_pixel_size;
-	return at(tile_index.x, tile_index.y);
+	return { at(tile_index.x, tile_index.y), tile_index };
 }
 
 game_world::game_world() {
@@ -192,15 +192,40 @@ void game_world::update() {
 		auto& bullet = bullets[i];
 		bullet.update(this);
 		if (bullet.has_hit_wall) {
-			tile_chunk* chunk = chunk_at_world_position(bullet.transform.position.xy + bullet.transform.scale.xy / 2.0f);
+			ne::vector2f position = bullet.transform.position.xy + bullet.transform.scale.xy / 2.0f;
+			tile_chunk* chunk = chunk_at_world_position(position);
 			if (chunk) {
-				uint32* tile = chunk->tile_at_world_position(bullet.transform.position.xy + bullet.transform.scale.xy / 2.0f);
-				if (tile && *tile == TILE_WALL) {
-					*tile = TILE_BG_TOP;
+				auto tile = chunk->tile_at_world_position(position);
+				if (tile.first && *tile.first == TILE_WALL) {
+					*tile.first = TILE_BG_TOP;
+					chunk->needs_rendering = true;
+					if (tile.second.x == 0) {
+						tile_chunk* left = at(chunk->index.x - 1, chunk->index.y);
+						if (left) {
+							left->needs_rendering = true;
+						}
+					} else if (tile.second.x == tile_chunk::tiles_per_row - 1) {
+						tile_chunk* right = at(chunk->index.x + 1, chunk->index.y);
+						if (right) {
+							right->needs_rendering = true;
+						}
+					}
+					if (tile.second.y == 0) {
+						tile_chunk* up = at(chunk->index.x, chunk->index.y - 1);
+						if (up) {
+							up->needs_rendering = true;
+						}
+					} else if (tile.second.y == tile_chunk::tiles_per_column - 1) {
+						tile_chunk* down = at(chunk->index.x, chunk->index.y + 1);
+						if (down) {
+							down->needs_rendering = true;
+						}
+					}
+					player.score++;
+					bullets.erase(bullets.begin() + i);
+					i--;
 				}
 			}
-			bullets.erase(bullets.begin() + i);
-			i--;
 		}
 	}
 }
@@ -239,12 +264,12 @@ bool game_world::is_free_at(const ne::vector2f& position) {
 	if (!chunk) {
 		return false;
 	}
-	uint32* tile = chunk->tile_at_world_position(position);
-	if (!tile) {
+	auto tile = chunk->tile_at_world_position(position);
+	if (!tile.first) {
 		NE_ERROR("No tile at world position " << position);
 		return false;
 	}
-	if (*tile == TILE_WALL) {
+	if (*tile.first == TILE_WALL) {
 		return false;
 	}
 	return true;

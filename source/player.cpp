@@ -6,13 +6,19 @@
 
 player_object::player_object() {
 	transform.scale.xy = textures.player[0].size.to<float>();
+	last_shot.start();
 }
 
 void player_object::update(game_world* world) {
 	if (shoot_listener_id == -1) {
 		shoot_listener_id = ne::listen([this, world](ne::keyboard_key_message key) {
-			if (key.is_pressed && key.key == KEY_SPACE && (w || a || s || d)) {
-				world->bullets.push_back({ transform, w, a, s, d });
+			if (key.is_pressed && key.key == KEY_SPACE && last_shot.milliseconds() > 250) {
+				if (w || a || s || d) {
+					world->bullets.push_back({ transform, w, a, s, d });
+				} else {
+					world->bullets.push_back({ transform, prev_w, direction == DIRECTION_LEFT, prev_s, direction == DIRECTION_RIGHT });
+				}
+				last_shot.start();
 			}
 		});
 	}
