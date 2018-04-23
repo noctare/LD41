@@ -14,7 +14,7 @@ void player_object::update(game_world* world) {
 	if (ne::is_key_down(KEY_SPACE) || ne::is_mouse_button_down(MOUSE_BUTTON_LEFT)) {
 		shoot(world);
 	}
-	if (rush_started.milliseconds() < rush_max_ms) {
+	if (rush_started.has_started && rush_started.milliseconds() < rush_max_ms) {
 		acceleration = 0.5f;
 		max_speed = 4.0f;
 		slowdown_rate = 0.2f;

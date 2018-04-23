@@ -243,8 +243,10 @@ void game_world::update_items(std::vector<item_object>& items, int type, int max
 				if (++player.hearts > 3) {
 					player.hearts = 3;
 				}
+				player.score += 5;
 			} else if (type == ITEM_INJECTION) {
 				player.rush_started.start();
+				player.score += 10;
 			}
 			items.erase(items.begin() + i);
 			i--;
@@ -446,7 +448,7 @@ bool game_world::is_free_at(const ne::vector2f& position) {
 	if (tile.first->type == TILE_WALL) {
 		return false;
 	}
-	if (tile.first->extra >= TILE_EX_BONE_BASE_LEFT && tile.first->extra < TILE_EX_BONE_TOP_RIGHT) {
+	if (tile.first->extra >= TILE_EX_BONE_BASE_LEFT && tile.first->extra <= TILE_EX_BONE_MID_RIGHT) {
 		return false;
 	}
 	return true;

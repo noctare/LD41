@@ -38,8 +38,8 @@ public:
 };
 
 struct tile_data {
-	uint16 type = 0;
-	int16 extra = -1;
+	int8 type = 0;
+	int8 extra = -1;
 };
 
 class world_chunk {
