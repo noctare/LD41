@@ -49,13 +49,13 @@ void player_object::draw() {
 	ne::transform3f draw_transform = transform;
 
 	if (!is_immune() || (immunity_timer.milliseconds() / 200) % 2 == 0) {
-		ne::shader::set_transform(&draw_transform);
 		if (type == PLAYER_GHOST) {
 			draw_transform.position.y -= bounce;
 			draw_transform.scale.x += bounce / 8.0f;
 			draw_transform.scale.y += bounce / 8.0f;
 			draw_transform.position.x -= bounce / 8.0f;
 			draw_transform.position.y -= bounce / 8.0f;
+			ne::shader::set_transform(&draw_transform);
 			textures.player[direction].bind();
 			still_quad().draw();
 		} else if (type == PLAYER_PINK) {
@@ -64,6 +64,7 @@ void player_object::draw() {
 			} else {
 				textures.player_2_idle[direction].bind();
 			}
+			ne::shader::set_transform(&draw_transform);
 			animated_quad().bind();
 			animation.draw();
 			still_quad().bind();

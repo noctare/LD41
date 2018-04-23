@@ -552,9 +552,13 @@ virus_object::virus_object() {
 	animation.fps = 5.0f;
 	transform.scale.xy = textures.virus.frame_size().to<float>();
 	hearts = 20;
+	waiter.start();
 }
 
 void virus_object::update(game_world* world) {
+	if (waiter.milliseconds() < 3000) {
+		return;
+	}
 	angle += 0.1f;
 	if (angle >= 360.0f) {
 		angle = 0.0f;

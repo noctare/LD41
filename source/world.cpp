@@ -297,10 +297,13 @@ void game_world::spawn_objects(world_chunk& chunk) {
 			x = ne::random_int(0, world_chunk::tiles_per_row - 1);
 			y = ne::random_int(0, world_chunk::tiles_per_column - 1);
 		} while (chunk.tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
-		blood_enemies.push_back({});
-		blood_enemies.back().transform.position.xy = chunk.transform.position.xy;
-		blood_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
-		blood_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+		ne::vector2f position = chunk.transform.position.xy;
+		position.x += (float)x * (float)world_chunk::tile_pixel_size;
+		position.y += (float)y * (float)world_chunk::tile_pixel_size;
+		if (player.transform.distance_to(position) > 128.0f) {
+			blood_enemies.push_back({});
+			blood_enemies.back().transform.position.xy = position;
+		}
 	}
 	if (worm_enemies.size() < 5) {
 		int x = -1;
@@ -309,10 +312,13 @@ void game_world::spawn_objects(world_chunk& chunk) {
 			x = ne::random_int(0, world_chunk::tiles_per_row - 1);
 			y = ne::random_int(0, world_chunk::tiles_per_column - 1);
 		} while (chunk.tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
-		worm_enemies.push_back({});
-		worm_enemies.back().transform.position.xy = chunk.transform.position.xy;
-		worm_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
-		worm_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+		ne::vector2f position = chunk.transform.position.xy;
+		position.x += (float)x * (float)world_chunk::tile_pixel_size;
+		position.y += (float)y * (float)world_chunk::tile_pixel_size;
+		if (player.transform.distance_to(position) > 128.0f) {
+			worm_enemies.push_back({});
+			worm_enemies.back().transform.position.xy = position;
+		}
 	}
 	if (slime_queens.size() < 3) {
 		int x = -1;
@@ -321,10 +327,13 @@ void game_world::spawn_objects(world_chunk& chunk) {
 			x = ne::random_int(0, world_chunk::tiles_per_row - 1);
 			y = ne::random_int(0, world_chunk::tiles_per_column - 1);
 		} while (chunk.tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
-		slime_queens.push_back({});
-		slime_queens.back().transform.position.xy = chunk.transform.position.xy;
-		slime_queens.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
-		slime_queens.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+		ne::vector2f position = chunk.transform.position.xy;
+		position.x += (float)x * (float)world_chunk::tile_pixel_size;
+		position.y += (float)y * (float)world_chunk::tile_pixel_size;
+		if (player.transform.distance_to(position) > 128.0f) {
+			slime_queens.push_back({});
+			slime_queens.back().transform.position.xy = position;
+		}
 	}
 	if (viruses.size() < 2) {
 		int x = -1;
@@ -333,10 +342,13 @@ void game_world::spawn_objects(world_chunk& chunk) {
 			x = ne::random_int(0, world_chunk::tiles_per_row - 1);
 			y = ne::random_int(0, world_chunk::tiles_per_column - 1);
 		} while (chunk.tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
-		viruses.push_back({});
-		viruses.back().transform.position.xy = chunk.transform.position.xy;
-		viruses.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
-		viruses.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+		ne::vector2f position = chunk.transform.position.xy;
+		position.x += (float)x * (float)world_chunk::tile_pixel_size;
+		position.y += (float)y * (float)world_chunk::tile_pixel_size;
+		if (player.transform.distance_to(position) > 128.0f) {
+			viruses.push_back({});
+			viruses.back().transform.position.xy = position;
+		}
 	}
 }
 
@@ -353,19 +365,34 @@ void game_world::update() {
 	for (auto& pimple : pimple_enemies) {
 		pimple.update(this);
 	}
-	for (auto& slime_queen : slime_queens) {
+	for (int i = 0; i < (int)slime_queens.size(); i++) {
+		auto& slime_queen = slime_queens[i];
 		slime_queen.update(this);
+		if (slime_queen.transform.distance_to(player.transform) > 512.0f) {
+			slime_queens.erase(slime_queens.begin() + i);
+			i--;
+		}
 	}
-	for (auto& worm : worm_enemies) {
+	for (int i = 0; i < (int)worm_enemies.size(); i++) {
+		auto& worm = worm_enemies[i];
 		worm.update(this);
 		if (player.transform.collides_with(worm.transform)) {
 			player.hurt(1);
 		}
+		if (worm.transform.distance_to(player.transform) > 512.0f) {
+			worm_enemies.erase(worm_enemies.begin() + i);
+			i--;
+		}
 	}
-	for (auto& slime : slime_enemies) {
+	for (int i = 0; i < (int)slime_enemies.size(); i++) {
+		auto& slime = slime_enemies[i];
 		slime.update(this);
 		if (player.transform.collides_with(slime.transform)) {
 			player.hurt(1);
+		}
+		if (slime.transform.distance_to(player.transform) > 512.0f) {
+			slime_enemies.erase(slime_enemies.begin() + i);
+			i--;
 		}
 	}
 	for (auto& spike : spikes) {
@@ -380,8 +407,13 @@ void game_world::update() {
 	for (auto& zindo_blood : zindo_bloods) {
 		zindo_blood.update(this);
 	}
-	for (auto& virus : viruses) {
+	for (int i = 0; i < (int)viruses.size(); i++) {
+		auto& virus = viruses[i];
 		virus.update(this);
+		if (virus.transform.distance_to(player.transform) > 512.0f) {
+			viruses.erase(viruses.begin() + i);
+			i--;
+		}
 	}
 	for (auto& neuron : neurons) {
 		neuron.update(this);
@@ -506,6 +538,10 @@ void game_world::update() {
 					zindo_blood.hurt(1);
 					if (zindo_blood.hearts < 1) {
 						player.score += 50;
+						if (ne::random_chance(0.2f)) {
+							flamethrowers.push_back({});
+							flamethrowers.back().transform.position.xy = zindo_blood.transform.position.xy + zindo_blood.transform.scale.xy / 2.0f;
+						}
 						zindo_bloods.erase(zindo_bloods.begin() + j);
 					}
 					destroy_i = true;
@@ -544,6 +580,10 @@ void game_world::update() {
 					pimple.hurt(1);
 					if (pimple.hearts < 1) {
 						player.score += 50;
+						if (ne::random_chance(0.2f)) {
+							shotguns.push_back({});
+							shotguns.back().transform.position.xy = pimple.transform.position.xy + pimple.transform.scale.xy / 2.0f;
+						}
 						pimple_enemies.erase(pimple_enemies.begin() + j);
 					}
 					destroy_i = true;
@@ -563,6 +603,10 @@ void game_world::update() {
 					neuron.hurt(1);
 					if (neuron.hearts < 1) {
 						player.score += 25;
+						if (ne::random_chance(0.2f)) {
+							shotguns.push_back({});
+							shotguns.back().transform.position.xy = neuron.transform.position.xy;
+						}
 						neurons.erase(neurons.begin() + j);
 					}
 					destroy_i = true;

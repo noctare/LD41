@@ -257,6 +257,7 @@ private:
 
 	ne::sprite_animation animation;
 	float angle = 0.0f;
+	ne::timer waiter;
 
 };
 
