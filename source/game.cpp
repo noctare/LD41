@@ -15,12 +15,20 @@ game_state::game_state() {
 
 	ne::hide_mouse();
 
-	ne::listen([&](ne::keyboard_key_message key) {
-		if (key.is_pressed && key.key == KEY_Z) {
+	key = ne::listen([&](ne::keyboard_key_message key) {
+		if (!key.is_pressed) {
+			return;
+		}
+		if (key.key == KEY_Z) {
 			if (camera.zoom > 1.0f) {
 				camera.zoom = 1.0f;
 			} else {
 				camera.zoom = 3.0f;
+			}
+		} else if (key.key == KEY_R) {
+			if (game_over) {
+				game_over = false;
+				ne::swap_state<game_state>();
 			}
 		}
 	});
@@ -31,7 +39,7 @@ game_state::game_state() {
 }
 
 game_state::~game_state() {
-	
+	ne::erase(&key);
 }
 
 void game_state::update() {
@@ -46,7 +54,7 @@ void game_state::update() {
 	}
 
 	if (world.player.hearts < 1) {
-		//game_over = true;
+		game_over = true;
 	}
 
 	score_label.render(STRING("Score: " << world.player.score));

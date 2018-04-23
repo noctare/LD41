@@ -543,6 +543,25 @@ void game_world::update() {
 			if (cont) {
 				continue;
 			}
+			for (int j = 0; j < (int)neurons.size(); j++) {
+				neuron_object& neuron = neurons[j];
+				if (bullet.transform.collides_with(neuron.transform)) {
+					neuron.hurt(1);
+					if (neuron.hearts < 1) {
+						player.score += 25;
+						neurons.erase(neurons.begin() + j);
+					}
+					destroy_i = true;
+					bullet.has_hit_wall = false;
+					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
+					break;
+				}
+			}
+			if (cont) {
+				continue;
+			}
 			for (int j = 0; j < (int)blood_enemies.size(); j++) {
 				enemy_blood_object& blood = blood_enemies[j];
 				if (bullet.transform.collides_with(blood.transform)) {

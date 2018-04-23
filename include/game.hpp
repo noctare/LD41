@@ -28,6 +28,8 @@ private:
 
 	ne::debug_info debug;
 
+	int key = -1;
+
 };
 
 ne::drawing_shape& still_quad();
