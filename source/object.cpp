@@ -304,6 +304,27 @@ void enemy_chaser_object::update(game_world* world) {
 		}
 		last_turn.start();
 	}
+	max_speed = max_speed_normal;
+	if (hold.w > 0) {
+		hold.w--;
+		w = true;
+		max_speed = max_speed_fast;
+	}
+	if (hold.s > 0) {
+		hold.s--;
+		s = true;
+		max_speed = max_speed_fast;
+	}
+	if (hold.a > 0) {
+		hold.a--;
+		a = true;
+		max_speed = max_speed_fast;
+	}
+	if (hold.d > 0) {
+		hold.d--;
+		d = true;
+		max_speed = max_speed_fast;
+	}
 	game_object::update(world);
 	if (collision_w) {
 		w = false;
@@ -334,6 +355,68 @@ void enemy_chaser_object::draw() {
 	}
 	ne::shader::set_transform(&draw_transform);
 	animation.draw();
+}
+
+enemy_slime_queen_object::enemy_slime_queen_object() {
+	transform.scale.xy = textures.queen_slime.frame_size().to<float>();
+	last_slime_drop.start();
+}
+
+void enemy_slime_queen_object::update(game_world* world) {
+	bounce = std::sin((float)ne::ticks() / 300000.0f + random_bounce) * 2.0f;
+	if (last_slime_drop.milliseconds() > 3000) {
+		enemy_chaser_object slime;
+		slime.max_speed_normal = 1.0f;
+		slime.transform.position = transform.position;
+		slime.transform.position.x += transform.scale.width / 2.0f - 4.0f;
+		slime.transform.position.y += transform.scale.height - 4.0f;
+		world->slime_enemies.push_back(slime);
+		last_slime_drop.start();
+	}
+}
+
+void enemy_slime_queen_object::draw() {
+	ne::transform3f draw_transform = transform;
+	draw_transform.position.y -= bounce;
+	draw_transform.scale.x += bounce / 8.0f;
+	draw_transform.scale.y += bounce / 8.0f;
+	draw_transform.position.x -= bounce / 8.0f;
+	draw_transform.position.y -= bounce / 8.0f;
+	ne::shader::set_transform(&draw_transform);
+	still_quad().draw();
+}
+
+void enemy_slime_queen_object::explode(game_world* world) {
+	enemy_chaser_object slime;
+	slime.max_speed_normal = 1.0f;
+	slime.max_speed_fast = 8.0f;
+	slime.speed = 8.0f;
+	slime.transform.position.xy = transform.position.xy + transform.scale.xy / 2.0f - 4.0f;
+	int ticks = 1000;
+	// Up
+	slime.hold = { ticks, 0, 0, 0 };
+	world->slime_enemies.push_back(slime);
+	// Left
+	slime.hold = { 0, ticks, 0, 0 };
+	world->slime_enemies.push_back(slime);
+	// Up left
+	slime.hold = { ticks, ticks, 0, 0 };
+	world->slime_enemies.push_back(slime);
+	// Down
+	slime.hold = { 0, 0, ticks, 0 };
+	world->slime_enemies.push_back(slime);
+	// Down left
+	slime.hold = { 0, ticks, ticks, 0 };
+	world->slime_enemies.push_back(slime);
+	// Right
+	slime.hold = { 0, 0, 0, ticks };
+	world->slime_enemies.push_back(slime);
+	// Up right
+	slime.hold = { ticks, 0, 0, ticks };
+	world->slime_enemies.push_back(slime);
+	// Down right
+	slime.hold = { 0, ticks, 0, ticks };
+	world->slime_enemies.push_back(slime);
 }
 
 item_object::item_object() {

@@ -41,6 +41,9 @@ public:
 	void turn_right(game_world* world, float speed, bool forward);
 	void move_forward(game_world* world, float speed);
 
+	float speed = 0.0f;
+	float max_speed = 2.0f;
+
 protected:
 
 	int move_directions = MOVE_DIRECTIONS_8;
@@ -49,8 +52,6 @@ protected:
 	float random_bounce = 0.0f;
 	
 	float acceleration = 0.1f;
-	float speed = 0.0f;
-	float max_speed = 2.0f;
 	float slowdown_rate = 0.5f;
 
 	// 360:
@@ -127,6 +128,16 @@ private:
 class enemy_chaser_object : public game_object {
 public:
 
+	float max_speed_normal = 2.0f;
+	float max_speed_fast = 4.0f;
+
+	struct {
+		int w = 0;
+		int a = 0;
+		int s = 0;
+		int d = 0;
+	} hold;
+
 	enemy_chaser_object();
 
 	void update(game_world* world);
@@ -143,7 +154,16 @@ private:
 class enemy_slime_queen_object : public game_object {
 public:
 
+	enemy_slime_queen_object();
 
+	void update(game_world* world);
+	void draw();
+
+	void explode(game_world* world);
+
+private:
+
+	ne::timer last_slime_drop;
 
 };
 

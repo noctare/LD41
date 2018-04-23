@@ -308,6 +308,18 @@ void game_world::spawn_objects(world_chunk& chunk) {
 		worm_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
 		worm_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
 	}
+	if (slime_queens.size() < 3) {
+		int x = -1;
+		int y = -1;
+		do {
+			x = ne::random_int(0, world_chunk::tiles_per_row - 1);
+			y = ne::random_int(0, world_chunk::tiles_per_column - 1);
+		} while (chunk.tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
+		slime_queens.push_back({});
+		slime_queens.back().transform.position.xy = chunk.transform.position.xy;
+		slime_queens.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+		slime_queens.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+	}
 }
 
 void game_world::update() {
@@ -323,9 +335,18 @@ void game_world::update() {
 	for (auto& pimple : pimple_enemies) {
 		pimple.update(this);
 	}
+	for (auto& slime_queen : slime_queens) {
+		slime_queen.update(this);
+	}
 	for (auto& worm : worm_enemies) {
 		worm.update(this);
 		if (player.transform.collides_with(worm.transform)) {
+			player.hurt(1);
+		}
+	}
+	for (auto& slime : slime_enemies) {
+		slime.update(this);
+		if (player.transform.collides_with(slime.transform)) {
 			player.hurt(1);
 		}
 	}
@@ -381,6 +402,21 @@ void game_world::update() {
 					destroy_i = true;
 					bullet.has_hit_wall = false;
 					slime_enemies.erase(slime_enemies.begin() + j);
+					cont = true;
+					break;
+				}
+			}
+			if (cont) {
+				continue;
+			}
+			for (int j = 0; j < (int)slime_queens.size(); j++) {
+				enemy_slime_queen_object& slime_queen = slime_queens[j];
+				if (bullet.transform.collides_with(slime_queen.transform)) {
+					player.score += 50;
+					destroy_i = true;
+					bullet.has_hit_wall = false;
+					slime_queen.explode(this);
+					slime_queens.erase(slime_queens.begin() + j);
 					break;
 				}
 			}
@@ -483,6 +519,14 @@ void game_world::draw(const ne::transform3f& view) {
 	textures.blood.bind();
 	for (auto& blood : blood_enemies) {
 		blood.draw();
+	}
+	textures.queen_slime.bind();
+	for (auto& slime_queen : slime_queens) {
+		slime_queen.draw();
+	}
+	textures.slime.bind();
+	for (auto& slime : slime_enemies) {
+		slime.draw();
 	}
 	textures.pill.bind();
 	for (auto& pill : pills) {
