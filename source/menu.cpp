@@ -32,5 +32,11 @@ void menu_state::update() {
 void menu_state::draw() {
 	shaders.basic.bind();
 	camera.bind();
+	ne::transform3f transform;
+	transform.scale.xy = camera.size();
+	ne::shader::set_transform(&transform);
+	textures.menu_bg.bind();
+	still_quad().bind();
+	still_quad().draw();
 	play.draw();
 }

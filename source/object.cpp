@@ -208,6 +208,10 @@ bullet_object::bullet_object(const ne::transform3f& origin, float angle, bool de
 	} else if (type == BULLET_BLOOD) {
 		transform.scale.xy = textures.blood_bullet.frame_size().to<float>();
 		animation.fps = 10.0f;
+	} else if (type == BULLET_SHOTGUN) {
+		transform.scale.xy = textures.shotgun_bullet.size.to<float>();
+	} else if (type == BULLET_FLAME) {
+		transform.scale.xy = textures.flame_bullet.size.to<float>();
 	}
 	transform.position.xy = origin.position.xy + origin.scale.xy / 2.0f - transform.scale.xy / 2.0f;
 	transform.rotation.z = angle;
@@ -481,6 +485,7 @@ void item_object::draw() {
 spike_object::spike_object() {
 	transform.scale.xy = textures.spike.frame_size().to<float>();
 	animation.fps = 5.0f;
+	hearts = 15;
 }
 
 void spike_object::update(game_world* world) {
@@ -488,6 +493,9 @@ void spike_object::update(game_world* world) {
 }
 
 void spike_object::draw() {
+	if (!should_draw()) {
+		return;
+	}
 	ne::shader::set_transform(&transform);
 	animation.draw();
 }

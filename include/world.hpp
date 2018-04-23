@@ -106,6 +106,8 @@ public:
 	std::vector<bullet_object> bullets;
 	std::vector<item_object> pills;
 	std::vector<item_object> injections;
+	std::vector<item_object> shotguns;
+	std::vector<item_object> flamethrowers;
 	std::vector<spike_object> spikes;
 	std::vector<artery_object> arteries;
 	std::vector<zindo_blood_object> zindo_bloods;

@@ -38,6 +38,13 @@ public:
 	ne::texture artery;
 	ne::texture laser;
 	ne::texture blood_bullet;
+	ne::texture shotgun[2];
+	ne::texture shotgun_bullet;
+	ne::texture flamethrower[2];
+	ne::texture flame_bullet;
+	ne::texture player_2_idle[2];
+	ne::texture player_2_walk[2];
+	ne::texture menu_bg;
 
 	void initialize();
 

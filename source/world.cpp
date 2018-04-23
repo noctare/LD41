@@ -273,6 +273,12 @@ void game_world::update_items(std::vector<item_object>& items, int type, int max
 			} else if (type == ITEM_INJECTION) {
 				player.rush_started.start();
 				player.score += 10;
+			} else if (type == ITEM_SHOTGUN) {
+				player.gun = GUN_SHOTGUN;
+				player.score += 5;
+			} else if (type == ITEM_FLAMETHROWER) {
+				player.gun = GUN_FLAME;
+				player.score += 5;
 			}
 			items.erase(items.begin() + i);
 			i--;
@@ -385,6 +391,8 @@ void game_world::update() {
 	}
 	update_items(pills, ITEM_PILL, 5);
 	update_items(injections, ITEM_INJECTION, 2);
+	update_items(shotguns, ITEM_SHOTGUN, 0);
+	update_items(flamethrowers, ITEM_FLAMETHROWER, 0);
 
 	world_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
 	if (player_chunk) {
@@ -454,6 +462,8 @@ void game_world::update() {
 					if (slime_queen.hearts < 1) {
 						player.score += 200;
 						slime_queen.explode(this);
+						shotguns.push_back({});
+						shotguns.back().transform.position.xy = slime_queen.transform.position.xy + slime_queen.transform.scale.xy / 2.0f;
 						slime_queens.erase(slime_queens.begin() + j);
 					}
 					destroy_i = true;
@@ -473,6 +483,10 @@ void game_world::update() {
 					virus.hurt(1);
 					if (virus.hearts < 1) {
 						player.score += 100;
+						if (ne::random_chance(0.75f)) {
+							flamethrowers.push_back({});
+							flamethrowers.back().transform.position.xy = virus.transform.position.xy + virus.transform.scale.xy / 2.0f;
+						}
 						viruses.erase(viruses.begin() + j);
 					}
 					destroy_i = true;
@@ -569,6 +583,25 @@ void game_world::update() {
 					if (blood.hearts < 1) {
 						player.score += 5;
 						blood_enemies.erase(blood_enemies.begin() + j);
+					}
+					destroy_i = true;
+					bullet.has_hit_wall = false;
+					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
+					break;
+				}
+			}
+			if (cont) {
+				continue;
+			}
+			for (int j = 0; j < (int)spikes.size(); j++) {
+				spike_object& spike = spikes[j];
+				if (bullet.transform.collides_with(spike.transform)) {
+					spike.hurt(1);
+					if (spike.hearts < 1) {
+						player.score += 10;
+						spikes.erase(spikes.begin() + j);
 					}
 					destroy_i = true;
 					bullet.has_hit_wall = false;
@@ -687,6 +720,20 @@ void game_world::draw(const ne::transform3f& view) {
 		}
 		bullet.draw();
 	}
+	textures.shotgun_bullet.bind();
+	for (auto& bullet : bullets) {
+		if (bullet.type != BULLET_SHOTGUN || !bullet.transform.collides_with(view)) {
+			continue;
+		}
+		bullet.draw();
+	}
+	textures.flame_bullet.bind();
+	for (auto& bullet : bullets) {
+		if (bullet.type != BULLET_FLAME || !bullet.transform.collides_with(view)) {
+			continue;
+		}
+		bullet.draw();
+	}
 	animated_quad().bind();
 	textures.artery.bind();
 	for (auto& artery : arteries) {
@@ -723,6 +770,14 @@ void game_world::draw(const ne::transform3f& view) {
 	textures.injection.bind();
 	for (auto& injection : injections) {
 		injection.draw();
+	}
+	textures.shotgun[0].bind();
+	for (auto& shotgun : shotguns) {
+		shotgun.draw();
+	}
+	textures.flamethrower[0].bind();
+	for (auto& flamethrower : flamethrowers) {
+		flamethrower.draw();
 	}
 	textures.neuron.bind();
 	for (auto& neuron : neurons) {
@@ -960,7 +1015,7 @@ void world_generator::normal(const ne::vector2i& index) {
 						world->neurons.push_back({});
 						world->neurons.back().transform.position.xy = chunk.transform.position.xy;
 						world->neurons.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
-						world->neurons.back().transform.position.y += (float)(y - 3) * (float)world_chunk::tile_pixel_size;
+						world->neurons.back().transform.position.y += (float)(y - 4) * (float)world_chunk::tile_pixel_size;
 					}
 				}
 			}

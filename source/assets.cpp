@@ -92,6 +92,17 @@ void texture_assets::initialize() {
 	load({ &artery, "artery.png", 5 });
 	load({ &laser, "laser.png" });
 	load({ &blood_bullet, "bloodbullet.png", 5 });
+	load({ &shotgun[0], "shotgun.png" });
+	load({ &shotgun[1], "shotgun.png", 1, TEXTURE_FLIP_X });
+	load({ &shotgun_bullet, "shotgunbullet.png" });
+	load({ &flamethrower[0], "flamethrower.png" });
+	load({ &flamethrower[1], "flamethrower.png", 1, TEXTURE_FLIP_X });
+	load({ &flame_bullet, "flamebullet.png" });
+	load({ &player_2_idle[0], "player2idle.png", 3, TEXTURE_IS_ANIMATED });
+	load({ &player_2_idle[1], "player2idle.png", 3, TEXTURE_IS_ANIMATED | TEXTURE_FLIP_X });
+	load({ &player_2_walk[0], "player2walk.png", 4, TEXTURE_IS_ANIMATED });
+	load({ &player_2_walk[1], "player2walk.png", 4, TEXTURE_IS_ANIMATED | TEXTURE_FLIP_X });
+	load({ &menu_bg, "menuscreen.png" });
 
 	spawn_thread();
 	finish();

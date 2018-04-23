@@ -12,12 +12,16 @@ class game_world;
 #define MOVE_DIRECTIONS_8    0
 #define MOVE_DIRECTIONS_360  1
 
-#define ITEM_PILL      0
-#define ITEM_INJECTION 1
+#define ITEM_PILL         0
+#define ITEM_INJECTION    1
+#define ITEM_SHOTGUN      2
+#define ITEM_FLAMETHROWER 3
 
-#define BULLET_NORMAL 0
-#define BULLET_LASER  1
-#define BULLET_BLOOD  2
+#define BULLET_NORMAL  0
+#define BULLET_LASER   1
+#define BULLET_BLOOD   2
+#define BULLET_SHOTGUN 3
+#define BULLET_FLAME   4
 
 class game_object {
 public:
