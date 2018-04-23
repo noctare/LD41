@@ -33,13 +33,13 @@ void menu_state::update() {
 	camera.transform.scale.xy = ne::window_size().to<float>();
 	camera.update();
 	play1.transform.position.x = camera.width() / 2.0f - play1.transform.scale.width / 2.0f - 96.0f;
-	play1.transform.position.y = camera.height() / 2.0f - play1.transform.scale.height / 2.0f;
+	play1.transform.position.y = 128.0f;
 	play1.update();
 	play2.transform.position.x = camera.width() / 2.0f - play2.transform.scale.width / 2.0f + 96.0f;
-	play2.transform.position.y = camera.height() / 2.0f - play2.transform.scale.height / 2.0f;
+	play2.transform.position.y = 128.0f;
 	play2.update();
 	select.transform.position.x = camera.width() / 2.0f - select.transform.scale.width / 2.0f;
-	select.transform.position.y = 96.0f;
+	select.transform.position.y = 32.0f;
 }
 
 void menu_state::draw() {
@@ -72,12 +72,11 @@ void menu_state::draw() {
 	
 	t.scale.xy = textures.menu_title.size.to<float>() * 4.0f;
 	t.position.x = camera.width() / 2.0f - t.scale.width / 2.0f;
-	t.position.y = 8.0f;
+	t.position.y = camera.height() - t.scale.height - 8.0f;
 	ne::shader::set_transform(&t);
 	textures.menu_title.bind();
 	still_quad().draw();
 
 	ne::shader::set_color(0.0f, 0.0f, 0.0f, 1.0f);
-	select.transform.position.y = play2.transform.position.y + play2.transform.scale.height + 32.0f;
 	select.draw();
 }
