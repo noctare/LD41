@@ -42,9 +42,11 @@ public:
 	ne::texture shotgun_bullet;
 	ne::texture flamethrower[2];
 	ne::texture flame_bullet;
+	ne::texture player_2;
 	ne::texture player_2_idle[2];
 	ne::texture player_2_walk[2];
 	ne::texture menu_bg;
+	ne::texture menu_title;
 
 	void initialize();
 

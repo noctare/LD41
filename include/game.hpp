@@ -19,7 +19,7 @@ public:
 	ne::ortho_camera ui_camera;
 	game_world world;
 
-	game_state();
+	game_state(int player_type);
 	~game_state() override;
 
 	void update() override;

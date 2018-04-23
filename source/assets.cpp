@@ -102,7 +102,9 @@ void texture_assets::initialize() {
 	load({ &player_2_idle[1], "player2idle.png", 3, TEXTURE_IS_ANIMATED | TEXTURE_FLIP_X });
 	load({ &player_2_walk[0], "player2walk.png", 4, TEXTURE_IS_ANIMATED });
 	load({ &player_2_walk[1], "player2walk.png", 4, TEXTURE_IS_ANIMATED | TEXTURE_FLIP_X });
+	load({ &player_2, "player2.png" });
 	load({ &menu_bg, "menuscreen.png" });
+	load({ &menu_title, "textmenuscreen.png" });
 
 	spawn_thread();
 	finish();

@@ -17,7 +17,9 @@ public:
 	
 private:
 
-	ne::ui_button play;
+	ne::ui_button play1;
+	ne::ui_button play2;
+	ne::font_text select;
 
 };
 

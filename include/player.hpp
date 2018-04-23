@@ -6,11 +6,15 @@
 #define GUN_SHOTGUN  1
 #define GUN_FLAME    2
 
+#define PLAYER_GHOST 0
+#define PLAYER_PINK  1
+
 class player_object : public game_object {
 public:
 
 	int64 score = 0;
 	int gun = GUN_DEAGLE;
+	int type = PLAYER_GHOST;
 
 	ne::timer rush_started;
 	int64 rush_max_ms = 3000;

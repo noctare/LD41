@@ -53,9 +53,13 @@ void player_object::draw() {
 	draw_transform.position.y -= bounce / 8.0f;
 
 	if (!is_immune() || (immunity_timer.milliseconds() / 200) % 2 == 0) {
-		textures.player[direction].bind();
 		ne::shader::set_transform(&draw_transform);
-		still_quad().draw();
+		if (type == PLAYER_GHOST) {
+			textures.player[direction].bind();
+			still_quad().draw();
+		} else if (type == PLAYER_PINK) {
+
+		}
 	}
 
 	float angle = ne::rad_to_deg(angle_to_mouse);

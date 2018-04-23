@@ -6,12 +6,13 @@
 #include <graphics.hpp>
 #include <platform.hpp>
 
-game_state::game_state() {
+game_state::game_state(int player_type) {
 	camera.target_chase_aspect.y = 2.0f;
 	camera.target_chase_speed = { 0.25f, 0.25f };
 	camera.zoom = 3.0f;
 
 	world.game = this;
+	world.player.type = player_type;
 
 	ne::hide_mouse();
 
@@ -28,7 +29,7 @@ game_state::game_state() {
 		} else if (key.key == KEY_R) {
 			if (game_over) {
 				game_over = false;
-				ne::swap_state<game_state>();
+				ne::swap_state<game_state>(world.player.type);
 			}
 		}
 	});
