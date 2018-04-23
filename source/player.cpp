@@ -6,6 +6,8 @@
 #include <math.hpp>
 
 player_object::player_object() {
+	hearts = 3;
+	immunity_lasts_ms = 2000;
 	transform.scale.xy = textures.player[0].size.to<float>();
 	last_shot.start();
 }
@@ -77,16 +79,4 @@ void player_object::shoot(game_world* world) {
 	bullet.by_player = true;
 	world->bullets.push_back(bullet);
 	last_shot.start();
-}
-
-bool player_object::is_immune() const {
-	return immunity_timer.has_started && immunity_timer.milliseconds() < 2000;
-}
-
-void player_object::hurt(int damage) {
-	if (is_immune()) {
-		return;
-	}
-	hearts -= damage;
-	immunity_timer.start();
 }

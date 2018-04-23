@@ -78,7 +78,7 @@ void texture_assets::initialize() {
 	load({ &flame_boost, "flameboost.png", 4, TEXTURE_IS_ANIMATED });
 	load({ &mace, "mace.png" });
 	load({ &eye_boss, "eyeboss.png" });
-	load({ &neurons, "neurons.png", 2 });
+	load({ &neuron, "neuron.png" });
 	load({ &pimple, "pimple.png", 2 });
 	load({ &queen_slime, "queenslime.png" });
 	load({ &slime, "slime.png" });

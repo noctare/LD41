@@ -110,6 +110,7 @@ public:
 	std::vector<artery_object> arteries;
 	std::vector<zindo_blood_object> zindo_bloods;
 	std::vector<virus_object> viruses;
+	std::vector<neuron_object> neurons;
 
 	game_world();
 

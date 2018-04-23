@@ -377,6 +377,12 @@ void game_world::update() {
 	for (auto& virus : viruses) {
 		virus.update(this);
 	}
+	for (auto& neuron : neurons) {
+		neuron.update(this);
+		if (player.transform.collides_with(neuron.transform)) {
+			player.hurt(1);
+		}
+	}
 	update_items(pills, ITEM_PILL, 5);
 	update_items(injections, ITEM_INJECTION, 2);
 
@@ -401,15 +407,21 @@ void game_world::update() {
 				bullet.has_hit_wall = false; // just a quickfix to avoid bullets breaking wall
 			}
 		} else {
+			// WARNING: TERRIBLE CODE AHEAD. Deadline approaching...
 			bool cont = false;
 			for (int j = 0; j < (int)worm_enemies.size(); j++) {
 				enemy_chaser_object& worm = worm_enemies[j];
 				if (bullet.transform.collides_with(worm.transform)) {
-					player.score += 5;
+					worm.hurt(1);
+					if (worm.hearts < 1) {
+						player.score += 5;
+						worm_enemies.erase(worm_enemies.begin() + j);
+					}
 					destroy_i = true;
 					bullet.has_hit_wall = false;
-					worm_enemies.erase(worm_enemies.begin() + j);
 					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
 					break;
 				}
 			}
@@ -419,11 +431,16 @@ void game_world::update() {
 			for (int j = 0; j < (int)slime_enemies.size(); j++) {
 				enemy_chaser_object& slime = slime_enemies[j];
 				if (bullet.transform.collides_with(slime.transform)) {
-					player.score += 5;
+					slime.hurt(1);
+					if (slime.hearts < 1) {
+						player.score += 5;
+						slime_enemies.erase(slime_enemies.begin() + j);
+					}
 					destroy_i = true;
 					bullet.has_hit_wall = false;
-					slime_enemies.erase(slime_enemies.begin() + j);
 					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
 					break;
 				}
 			}
@@ -433,13 +450,117 @@ void game_world::update() {
 			for (int j = 0; j < (int)slime_queens.size(); j++) {
 				enemy_slime_queen_object& slime_queen = slime_queens[j];
 				if (bullet.transform.collides_with(slime_queen.transform)) {
-					player.score += 50;
+					slime_queen.hurt(1);
+					if (slime_queen.hearts < 1) {
+						player.score += 200;
+						slime_queen.explode(this);
+						slime_queens.erase(slime_queens.begin() + j);
+					}
 					destroy_i = true;
 					bullet.has_hit_wall = false;
-					slime_queen.explode(this);
-					slime_queens.erase(slime_queens.begin() + j);
+					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
 					break;
 				}
+			}
+			if (cont) {
+				continue;
+			}
+			for (int j = 0; j < (int)viruses.size(); j++) {
+				virus_object& virus = viruses[j];
+				if (bullet.transform.collides_with(virus.transform)) {
+					virus.hurt(1);
+					if (virus.hearts < 1) {
+						player.score += 100;
+						viruses.erase(viruses.begin() + j);
+					}
+					destroy_i = true;
+					bullet.has_hit_wall = false;
+					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
+					break;
+				}
+			}
+			if (cont) {
+				continue;
+			}
+			for (int j = 0; j < (int)zindo_bloods.size(); j++) {
+				zindo_blood_object& zindo_blood = zindo_bloods[j];
+				if (bullet.transform.collides_with(zindo_blood.transform)) {
+					zindo_blood.hurt(1);
+					if (zindo_blood.hearts < 1) {
+						player.score += 50;
+						zindo_bloods.erase(zindo_bloods.begin() + j);
+					}
+					destroy_i = true;
+					bullet.has_hit_wall = false;
+					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
+					break;
+				}
+			}
+			if (cont) {
+				continue;
+			}
+			for (int j = 0; j < (int)arteries.size(); j++) {
+				artery_object& artery = arteries[j];
+				if (bullet.transform.collides_with(artery.transform)) {
+					artery.hurt(1);
+					if (artery.hearts < 1) {
+						player.score += 5;
+						arteries.erase(arteries.begin() + j);
+					}
+					destroy_i = true;
+					bullet.has_hit_wall = false;
+					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
+					break;
+				}
+			}
+			if (cont) {
+				continue;
+			}
+			for (int j = 0; j < (int)pimple_enemies.size(); j++) {
+				enemy_pimple_object& pimple = pimple_enemies[j];
+				if (bullet.transform.collides_with(pimple.transform)) {
+					pimple.hurt(1);
+					if (pimple.hearts < 1) {
+						player.score += 50;
+						pimple_enemies.erase(pimple_enemies.begin() + j);
+					}
+					destroy_i = true;
+					bullet.has_hit_wall = false;
+					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
+					break;
+				}
+			}
+			if (cont) {
+				continue;
+			}
+			for (int j = 0; j < (int)blood_enemies.size(); j++) {
+				enemy_blood_object& blood = blood_enemies[j];
+				if (bullet.transform.collides_with(blood.transform)) {
+					blood.hurt(1);
+					if (blood.hearts < 1) {
+						player.score += 5;
+						blood_enemies.erase(blood_enemies.begin() + j);
+					}
+					destroy_i = true;
+					bullet.has_hit_wall = false;
+					cont = true;
+					bullets.erase(bullets.begin() + i);
+					i--;
+					break;
+				}
+			}
+			if (cont) {
+				continue;
 			}
 		}
 		if (bullet.has_hit_wall) {
@@ -547,8 +668,15 @@ void game_world::draw(const ne::transform3f& view) {
 		}
 		bullet.draw();
 	}
-	textures.blood_bullet.bind();
 	animated_quad().bind();
+	textures.artery.bind();
+	for (auto& artery : arteries) {
+		if (!artery.transform.collides_with(view)) {
+			continue;
+		}
+		artery.draw();
+	}
+	textures.blood_bullet.bind();
 	for (auto& bullet : bullets) {
 		if (bullet.type != BULLET_BLOOD || !bullet.transform.collides_with(view)) {
 			continue;
@@ -577,6 +705,13 @@ void game_world::draw(const ne::transform3f& view) {
 	for (auto& injection : injections) {
 		injection.draw();
 	}
+	textures.neuron.bind();
+	for (auto& neuron : neurons) {
+		if (!neuron.transform.collides_with(view)) {
+			continue;
+		}
+		neuron.draw();
+	}
 	textures.spike.bind();
 	animated_quad().bind();
 	for (auto& spike : spikes) {
@@ -584,13 +719,6 @@ void game_world::draw(const ne::transform3f& view) {
 			continue;
 		}
 		spike.draw();
-	}
-	textures.artery.bind();
-	for (auto& artery : arteries) {
-		if (!artery.transform.collides_with(view)) {
-			continue;
-		}
-		artery.draw();
 	}
 	textures.zindo_blood.bind();
 	for (auto& zindo_blood : zindo_bloods) {
@@ -809,6 +937,11 @@ void world_generator::normal(const ne::vector2i& index) {
 						world->zindo_bloods.back().transform.position.xy = chunk.transform.position.xy;
 						world->zindo_bloods.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
 						world->zindo_bloods.back().transform.position.y += (float)(y - 3) * (float)world_chunk::tile_pixel_size;
+					} else if (ne::random_chance(0.2f)) {
+						world->neurons.push_back({});
+						world->neurons.back().transform.position.xy = chunk.transform.position.xy;
+						world->neurons.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+						world->neurons.back().transform.position.y += (float)(y - 3) * (float)world_chunk::tile_pixel_size;
 					}
 				}
 			}

@@ -15,17 +15,26 @@ class game_world;
 #define ITEM_PILL      0
 #define ITEM_INJECTION 1
 
+#define BULLET_NORMAL 0
+#define BULLET_LASER  1
+#define BULLET_BLOOD  2
+
 class game_object {
 public:
 
 	int id = 0;
 	ne::transform3f transform;
 	int direction = 0;
+	int hearts = 1;
+	int immunity_lasts_ms = 1;
 
 	virtual ~game_object() = default;
 
 	virtual void update(game_world* world);
 	virtual void draw() = 0;
+
+	void hurt(int damage);
+	bool is_immune() const;
 
 	// 8 directions:
 	void move_left(game_world* world, float speed);
@@ -43,6 +52,10 @@ public:
 
 	float speed = 0.0f;
 	float max_speed = 2.0f;
+
+	ne::timer immunity_timer;
+	
+	bool should_draw() const;
 
 protected:
 
@@ -80,10 +93,6 @@ protected:
 	void accelerate();
 
 };
-
-#define BULLET_NORMAL 0
-#define BULLET_LASER  1
-#define BULLET_BLOOD  2
 
 class bullet_object : public game_object {
 public:
@@ -244,5 +253,15 @@ private:
 
 	ne::sprite_animation animation;
 	float angle = 0.0f;
+
+};
+
+class neuron_object : public game_object {
+public:
+
+	neuron_object();
+
+	void update(game_world* world);
+	void draw();
 
 };

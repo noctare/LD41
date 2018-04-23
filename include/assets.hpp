@@ -24,7 +24,7 @@ public:
 	ne::texture flame_boost;
 	ne::texture mace;
 	ne::texture eye_boss;
-	ne::texture neurons;
+	ne::texture neuron;
 	ne::texture pimple;
 	ne::texture queen_slime;
 	ne::texture slime;

@@ -3,6 +3,22 @@
 #include "assets.hpp"
 #include "game.hpp"
 
+bool game_object::is_immune() const {
+	return immunity_timer.has_started && immunity_timer.milliseconds() < immunity_lasts_ms;
+}
+
+void game_object::hurt(int damage) {
+	if (is_immune()) {
+		return;
+	}
+	hearts -= damage;
+	immunity_timer.start();
+}
+
+bool game_object::should_draw() const {
+	return !immunity_timer.has_started || immunity_timer.milliseconds() > 50;
+}
+
 void game_object::update(game_world* world) {
 	angle_to_mouse = ne::deg_to_rad(transform.angle_to(world->game->camera.mouse()));
 	speed -= acceleration * slowdown_rate;
@@ -221,6 +237,7 @@ enemy_blood_object::enemy_blood_object() {
 	transform.scale.xy = textures.blood.size.to<float>();
 	move_directions = MOVE_DIRECTIONS_360;
 	random_bounce = ne::random_float(0.0f, 10000.0f);
+	hearts = 1;
 }
 
 void enemy_blood_object::update(game_world* world) {
@@ -251,6 +268,7 @@ enemy_pimple_object::enemy_pimple_object() {
 	timer.start();
 	first_reset_ms = ne::random_int(2000);
 	interval_ms = 1000 + ne::random_int(2000);
+	hearts = 10;
 }
 
 void enemy_pimple_object::update(game_world* world) {
@@ -283,6 +301,9 @@ void enemy_pimple_object::update(game_world* world) {
 }
 
 void enemy_pimple_object::draw() {
+	if (!should_draw()) {
+		return;
+	}
 	ne::shader::set_transform(&transform);
 	animation.frame = (is_up ? 0 : 1);
 	animation.draw(false);
@@ -292,6 +313,7 @@ enemy_chaser_object::enemy_chaser_object() {
 	last_turn.start();
 	acceleration = 0.1f;
 	max_speed = 1.0f;
+	hearts = 5;
 }
 
 void enemy_chaser_object::update(game_world* world) {
@@ -357,6 +379,9 @@ void enemy_chaser_object::update(game_world* world) {
 }
 
 void enemy_chaser_object::draw() {
+	if (!should_draw()) {
+		return;
+	}
 	transform.scale.xy = ne::texture::bound()->frame_size().to<float>();
 	ne::transform3f draw_transform = transform;
 	if (direction == DIRECTION_RIGHT) {
@@ -368,6 +393,7 @@ void enemy_chaser_object::draw() {
 }
 
 enemy_slime_queen_object::enemy_slime_queen_object() {
+	hearts = 50;
 	transform.scale.xy = textures.queen_slime.frame_size().to<float>();
 	last_slime_drop.start();
 }
@@ -386,6 +412,9 @@ void enemy_slime_queen_object::update(game_world* world) {
 }
 
 void enemy_slime_queen_object::draw() {
+	if (!should_draw()) {
+		return;
+	}
 	ne::transform3f draw_transform = transform;
 	draw_transform.position.y -= bounce;
 	draw_transform.scale.x += bounce / 8.0f;
@@ -467,6 +496,7 @@ artery_object::artery_object() {
 	animation.fps = 0.0f;
 	transform.scale.xy = textures.artery.frame_size().to<float>();
 	is_flipped = ne::random_chance(0.45f);
+	hearts = 5;
 }
 
 void artery_object::update(game_world* world) {
@@ -474,6 +504,9 @@ void artery_object::update(game_world* world) {
 }
 
 void artery_object::draw() {
+	if (!should_draw()) {
+		return;
+	}
 	ne::transform3f draw_transform = transform;
 	if (is_flipped) {
 		draw_transform.position.x += transform.scale.width;
@@ -486,6 +519,7 @@ void artery_object::draw() {
 }
 
 zindo_blood_object::zindo_blood_object() {
+	hearts = 10;
 	animation.fps = 5.0f + ne::random_float(5.0f);
 	transform.scale.xy = textures.artery.frame_size().to<float>();
 	last_shot.start();
@@ -499,6 +533,9 @@ void zindo_blood_object::update(game_world* world) {
 }
 
 void zindo_blood_object::draw() {
+	if (!should_draw()) {
+		return;
+	}
 	ne::shader::set_transform(&transform);
 	animation.draw();
 }
@@ -506,6 +543,7 @@ void zindo_blood_object::draw() {
 virus_object::virus_object() {
 	animation.fps = 5.0f;
 	transform.scale.xy = textures.virus.frame_size().to<float>();
+	hearts = 20;
 }
 
 void virus_object::update(game_world* world) {
@@ -521,6 +559,9 @@ void virus_object::update(game_world* world) {
 }
 
 void virus_object::draw() {
+	if (!should_draw()) {
+		return;
+	}
 	textures.virus.bind();
 	ne::shader::set_transform(&transform);
 	still_quad().bind();
@@ -536,4 +577,21 @@ void virus_object::draw() {
 	ne::shader::set_transform(&flame_transform);
 	animated_quad().bind();
 	animation.draw();
+}
+
+neuron_object::neuron_object() {
+	transform.scale.xy = textures.neuron.frame_size().to<float>();
+	hearts = 10;
+}
+
+void neuron_object::update(game_world* world) {
+	
+}
+
+void neuron_object::draw() {
+	if (!should_draw()) {
+		return;
+	}
+	ne::shader::set_transform(&transform);
+	still_quad().draw();
 }

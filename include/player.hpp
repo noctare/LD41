@@ -6,7 +6,6 @@ class player_object : public game_object {
 public:
 
 	int64 score = 0;
-	int hearts = 3;
 
 	ne::timer rush_started;
 	int64 rush_max_ms = 3000;
@@ -18,12 +17,8 @@ public:
 
 	void shoot(game_world* world);
 
-	void hurt(int damage);
-	bool is_immune() const;
-
 private:
 
 	ne::timer last_shot;
-	ne::timer immunity_timer;
 
 };
