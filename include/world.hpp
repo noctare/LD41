@@ -13,12 +13,17 @@
 class player_object;
 class game_world;
 class game_state;
+class tile_chunk;
+class object_chunk;
 
 class world_generator {
 public:
 
 	void normal(const ne::vector2i& index);
 	void border(const ne::vector2i& index);
+
+	bool add_bone(tile_chunk& chunk, object_chunk& object_chunk, int i);
+	bool add_spike(tile_chunk& chunk, object_chunk& object_chunk, int i);
 
 	game_world* world = nullptr;
 
@@ -95,6 +100,7 @@ public:
 	std::vector<bullet_object> bullets;
 	std::vector<item_object> pills;
 	std::vector<item_object> injections;
+	std::vector<spike_object> spikes;
 
 	game_world();
 

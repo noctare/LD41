@@ -34,15 +34,18 @@ void player_object::update(game_world* world) {
 }
 
 void player_object::draw() {
-	textures.player[direction].bind();
 	ne::transform3f draw_transform = transform;
 	draw_transform.position.y -= bounce;
 	draw_transform.scale.x += bounce / 8.0f;
 	draw_transform.scale.y += bounce / 8.0f;
 	draw_transform.position.x -= bounce / 8.0f;
 	draw_transform.position.y -= bounce / 8.0f;
-	ne::shader::set_transform(&draw_transform);
-	still_quad().draw();
+
+	if (!is_immune() || (immunity_timer.milliseconds() / 200) % 2 == 0) {
+		textures.player[direction].bind();
+		ne::shader::set_transform(&draw_transform);
+		still_quad().draw();
+	}
 
 	float angle = ne::rad_to_deg(angle_to_mouse);
 	if (angle > 90.0f && angle < 270.0f) {
@@ -74,4 +77,16 @@ void player_object::shoot(game_world* world) {
 	bullet.by_player = true;
 	world->bullets.push_back(bullet);
 	last_shot.start();
+}
+
+bool player_object::is_immune() const {
+	return immunity_timer.has_started && immunity_timer.milliseconds() < 2000;
+}
+
+void player_object::hurt(int damage) {
+	if (is_immune()) {
+		return;
+	}
+	hearts -= damage;
+	immunity_timer.start();
 }

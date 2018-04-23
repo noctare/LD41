@@ -296,3 +296,17 @@ void item_object::draw() {
 	ne::shader::set_transform(&draw_transform);
 	still_quad().draw();
 }
+
+spike_object::spike_object() {
+	transform.scale.xy = textures.spike.frame_size().to<float>();
+	animation.fps = 5.0f;
+}
+
+void spike_object::update(game_world* world) {
+	
+}
+
+void spike_object::draw() {
+	ne::shader::set_transform(&transform);
+	animation.draw();
+}

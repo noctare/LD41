@@ -132,3 +132,17 @@ public:
 	void draw();
 
 };
+
+class spike_object : public game_object {
+public:
+
+	spike_object();
+
+	void update(game_world* world);
+	void draw();
+
+private:
+
+	ne::sprite_animation animation;
+
+};

@@ -248,6 +248,12 @@ void game_world::update() {
 		auto& pimple = pimple_enemies[i];
 		pimple.update(this);
 	}
+	for (auto& spike : spikes) {
+		spike.update(this);
+		if (player.transform.collides_with(spike.transform)) {
+			player.hurt(1);
+		}
+	}
 	update_items(pills, ITEM_PILL, 5);
 	update_items(injections, ITEM_INJECTION, 2);
 	if (blood_enemies.size() < 10) {
@@ -271,7 +277,7 @@ void game_world::update() {
 		bool destroy_i = false;
 		if (!bullet.by_player) {
 			if (bullet.transform.collides_with(player.transform)) {
-				player.hearts--;
+				player.hurt(1);
 				destroy_i = true;
 				bullet.has_hit_wall = false; // just a quickfix to avoid bullets breaking wall
 			}
@@ -360,6 +366,12 @@ void game_world::draw(const ne::transform3f& view) {
 	for (auto& injection : injections) {
 		injection.draw();
 	}
+	textures.spike.bind();
+	animated_quad().bind();
+	for (auto& spike : spikes) {
+		spike.draw();
+	}
+	still_quad().bind();
 	// Draw cursor:
 	ne::vector2i mouse = game->camera.mouse().to<int>();
 	//mouse.x -= mouse.x % tile_chunk::tile_pixel_size;
@@ -369,7 +381,6 @@ void game_world::draw(const ne::transform3f& view) {
 	cursor.scale.xy = textures.cursor.size.to<float>();
 	ne::shader::set_transform(&cursor);
 	textures.cursor.bind();
-	still_quad().bind();
 	still_quad().draw();
 }
 
@@ -424,6 +435,61 @@ bool game_world::is_free_at(const ne::vector2f& position) {
 	return true;
 }
 
+bool world_generator::add_bone(tile_chunk& chunk, object_chunk& object_chunk, int i) {
+	int x = i % base_chunk::tiles_per_row;
+	int y = i / base_chunk::tiles_per_row;
+	if (y > 5 && x % 2 != 0 && chunk.tiles[i] == TILE_WALL && chunk.tiles[i + 1] == TILE_WALL && ne::random_chance(0.4f)) {
+		int j = i - base_chunk::tiles_per_row;
+		int k = j - base_chunk::tiles_per_row;
+		int l = k - base_chunk::tiles_per_row;
+		bool left = (chunk.tiles[j] != TILE_WALL && chunk.tiles[k] != TILE_WALL && chunk.tiles[l] != TILE_WALL);
+		bool right = (chunk.tiles[j + 1] != TILE_WALL && chunk.tiles[k + 1] != TILE_WALL && chunk.tiles[l + 1] != TILE_WALL);
+		if (left && right) {
+			int type = 0;
+			int m = l - base_chunk::tiles_per_row;
+			type += ((chunk.tiles[m] != TILE_WALL && chunk.tiles[m + 1] && ne::random_chance(0.5)) ? 1 : 0);
+			if (type == 1) {
+				int n = m - base_chunk::tiles_per_row;
+				type += ((chunk.tiles[n] != TILE_WALL && chunk.tiles[n + 1] && ne::random_chance(0.5)) ? 1 : 0);
+			}
+			bone_object bone;
+			bone.transform.position.xy = {
+				(float)x * (float)base_chunk::tile_pixel_size,
+				(float)(y - 7) * (float)base_chunk::tile_pixel_size
+			};
+			bone.type = type;
+			object_chunk.bones.push_back(bone);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool world_generator::add_spike(tile_chunk& chunk, object_chunk& object_chunk, int i) {
+	int x = i % base_chunk::tiles_per_row;
+	int y = i / base_chunk::tiles_per_row;
+	if (y > 5 && x % 2 != 0 && chunk.tiles[i] == TILE_WALL && chunk.tiles[i + 1] == TILE_WALL && ne::random_chance(0.6f)) {
+		int j = i - base_chunk::tiles_per_row;
+		int k = j - base_chunk::tiles_per_row;
+		int l = k - base_chunk::tiles_per_row;
+		bool left = (chunk.tiles[j] != TILE_WALL && chunk.tiles[k] != TILE_WALL && chunk.tiles[l] != TILE_WALL);
+		bool right = (chunk.tiles[j + 1] != TILE_WALL && chunk.tiles[k + 1] != TILE_WALL && chunk.tiles[l + 1] != TILE_WALL);
+		if (!left || !right) {
+			return false;
+		}
+		spike_object spike;
+		spike.transform.position.xy = {
+			(float)x * (float)base_chunk::tile_pixel_size,
+			((float)y - 4.5f) * (float)base_chunk::tile_pixel_size
+		};
+		spike.transform.position.x += chunk.transform.position.x;
+		spike.transform.position.y += chunk.transform.position.y;
+		world->spikes.push_back(spike);
+		return true;
+	}
+	return false;
+}
+
 void world_generator::normal(const ne::vector2i& index) {
 	int tile_x = index.x * base_chunk::tiles_per_row;
 	int tile_y = index.y * base_chunk::tiles_per_column;
@@ -454,36 +520,18 @@ void world_generator::normal(const ne::vector2i& index) {
 	for (int i = 0; i < base_chunk::total_tiles; i++) {
 		int x = i % base_chunk::tiles_per_row;
 		int y = i / base_chunk::tiles_per_row;
-		if (y > 5 && x % 2 != 0 && chunk.tiles[i] == TILE_WALL && chunk.tiles[i + 1] == TILE_WALL && ne::random_chance(0.7f)) {
-			int j = i - base_chunk::tiles_per_row;
-			int k = j - base_chunk::tiles_per_row;
-			int l = k - base_chunk::tiles_per_row;
-			bool left = (chunk.tiles[j] != TILE_WALL && chunk.tiles[k] != TILE_WALL && chunk.tiles[l] != TILE_WALL);
-			bool right = (chunk.tiles[j + 1] != TILE_WALL && chunk.tiles[k + 1] != TILE_WALL && chunk.tiles[l + 1] != TILE_WALL);
-			if (left && right) {
-				int type = 0;
-				int m = l - base_chunk::tiles_per_row;
-				type += ((chunk.tiles[m] != TILE_WALL && chunk.tiles[m + 1] && ne::random_chance(0.5)) ? 1 : 0);
-				if (type == 1) {
-					int n = m - base_chunk::tiles_per_row;
-					type += ((chunk.tiles[n] != TILE_WALL && chunk.tiles[n + 1] && ne::random_chance(0.5)) ? 1 : 0);
-				}
-				bone_object bone;
-				bone.transform.position.xy = {
-					(float)x * (float)base_chunk::tile_pixel_size,
-					(float)(y - 7) * (float)base_chunk::tile_pixel_size
-				};
-				bone.type = type;
-				object_chunk.bones.push_back(bone);
-				continue;
-			}
+		bool added = add_bone(chunk, object_chunk, i);
+		if (!added) {
+			added = add_spike(chunk, object_chunk, i);
 		}
-		if (chunk.tiles[i] != TILE_WALL) {
-			if (ne::random_chance(0.003f)) {
-				world->pimple_enemies.push_back({});
-				world->pimple_enemies.back().transform.position.xy = chunk.transform.position.xy;
-				world->pimple_enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
-				world->pimple_enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
+		if (!added) {
+			if (chunk.tiles[i] != TILE_WALL) {
+				if (ne::random_chance(0.003f)) {
+					world->pimple_enemies.push_back({});
+					world->pimple_enemies.back().transform.position.xy = chunk.transform.position.xy;
+					world->pimple_enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
+					world->pimple_enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
+				}
 			}
 		}
 	}

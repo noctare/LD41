@@ -18,8 +18,12 @@ public:
 
 	void shoot(game_world* world);
 
+	void hurt(int damage);
+	bool is_immune() const;
+
 private:
 
 	ne::timer last_shot;
+	ne::timer immunity_timer;
 
 };
