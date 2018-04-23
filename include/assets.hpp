@@ -44,7 +44,7 @@ public:
 class font_assets : public ne::font_group {
 public:
 
-	ne::font big;
+	ne::font game_over;
 	ne::font hud;
 	ne::font button;
 	ne::font debug;

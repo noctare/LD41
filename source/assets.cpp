@@ -101,7 +101,7 @@ void texture_assets::initialize() {
 
 void font_assets::initialize() {
 	root("assets/fonts");
-	load({ &big, "leo.ttf", 48, false });
+	load({ &game_over, "leo.ttf", 48, false });
 	load({ &hud, "leo.ttf", 36, false });
 	load({ &button, "leo.ttf", 20, false });
 	load({ &debug, "leo.ttf", 16, false });

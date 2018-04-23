@@ -40,14 +40,23 @@ public:
 struct tile_data {
 	int8 type = 0;
 	int8 extra = -1;
+	int8 health = 1;
+};
+
+struct slime_tile_data {
+	int i = -1;
+	ne::sprite_animation animation;
+	slime_tile_data(int i) : i(i) {
+		animation.fps = 2.0f + ne::random_float(10.0f);
+	}
 };
 
 class world_chunk {
 public:
 
 	static const int tile_pixel_size = 16;
-	static const int tiles_per_row = 16;
-	static const int tiles_per_column = 16;
+	static const int tiles_per_row = 32;
+	static const int tiles_per_column = 32;
 	static const int total_tiles = tiles_per_row * tiles_per_column;
 	static const int pixel_width = tiles_per_row * tile_pixel_size;
 	static const int pixel_height = tiles_per_column * tile_pixel_size;
@@ -61,6 +70,7 @@ public:
 	ne::drawing_shape shape;
 
 	tile_data tiles[total_tiles];
+	std::vector<slime_tile_data> slime_tiles;
 
 	tile_data* at(int x, int y);
 	void render_tile(int type);
@@ -71,7 +81,8 @@ public:
 	world_chunk();
 
 	void set_index(const ne::vector2i& index);
-	void draw();
+	void draw_tiles();
+	void draw_slime();
 
 };
 
@@ -95,7 +106,8 @@ public:
 	player_object player;
 	std::vector<enemy_blood_object> blood_enemies;
 	std::vector<enemy_pimple_object> pimple_enemies;
-	std::vector<enemy_worm_object> worm_enemies;
+	std::vector<enemy_chaser_object> worm_enemies;
+	std::vector<enemy_chaser_object> slime_enemies;
 	std::vector<bullet_object> bullets;
 	std::vector<item_object> pills;
 	std::vector<item_object> injections;

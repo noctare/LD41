@@ -120,13 +120,14 @@ private:
 	ne::timer timer;
 	bool can_shoot = false;
 	int64 first_reset_ms = 0;
+	int64 interval_ms = 0;
 
 };
 
-class enemy_worm_object : public game_object {
+class enemy_chaser_object : public game_object {
 public:
 
-	enemy_worm_object();
+	enemy_chaser_object();
 
 	void update(game_world* world);
 	void draw();

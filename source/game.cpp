@@ -1,6 +1,8 @@
 #include "game.hpp"
 #include "assets.hpp"
 
+#include <SDL/ttf/SDL_ttf.h>
+
 #include <graphics.hpp>
 #include <platform.hpp>
 
@@ -24,7 +26,7 @@ game_state::game_state() {
 	});
 
 	score_label.font = &fonts.hud;
-	game_over_label.font = &fonts.big;
+	game_over_label.font = &fonts.game_over;
 	game_over_label.render("Game over!");
 }
 

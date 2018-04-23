@@ -240,6 +240,7 @@ enemy_pimple_object::enemy_pimple_object() {
 	transform.scale.xy = textures.pimple.frame_size().to<float>();
 	timer.start();
 	first_reset_ms = ne::random_int(2000);
+	interval_ms = 1000 + ne::random_int(2000);
 }
 
 void enemy_pimple_object::update(game_world* world) {
@@ -249,9 +250,9 @@ void enemy_pimple_object::update(game_world* world) {
 		return;
 	}
 	if (is_up) {
-		if (timer.milliseconds() > 4000) {
+		if (timer.milliseconds() > interval_ms * 2) {
 			is_up = false;
-		} else if (timer.milliseconds() > 2000 && can_shoot) {
+		} else if (timer.milliseconds() > interval_ms && can_shoot) {
 			world->bullets.push_back({ transform, ne::deg_to_rad(0.0f), false });
 			world->bullets.push_back({ transform, ne::deg_to_rad(45.0f), false });
 			world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false });
@@ -263,7 +264,7 @@ void enemy_pimple_object::update(game_world* world) {
 			can_shoot = false;
 		}
 	} else {
-		if (timer.milliseconds() > 8000) {
+		if (timer.milliseconds() > interval_ms * 4) {
 			is_up = true;
 			can_shoot = true;
 			timer.start();
@@ -277,14 +278,13 @@ void enemy_pimple_object::draw() {
 	animation.draw(false);
 }
 
-enemy_worm_object::enemy_worm_object() {
-	transform.scale.xy = textures.worm.frame_size().to<float>();
+enemy_chaser_object::enemy_chaser_object() {
 	last_turn.start();
 	acceleration = 0.1f;
 	max_speed = 1.0f;
 }
 
-void enemy_worm_object::update(game_world* world) {
+void enemy_chaser_object::update(game_world* world) {
 	if (last_turn.milliseconds() > ne::random_int(1000) + wait_ms) {
 		wait_ms = 0;
 		float angle_to_player = world->player.transform.angle_to(transform);
@@ -325,7 +325,8 @@ void enemy_worm_object::update(game_world* world) {
 	}
 }
 
-void enemy_worm_object::draw() {
+void enemy_chaser_object::draw() {
+	transform.scale.xy = ne::texture::bound()->frame_size().to<float>();
 	ne::transform3f draw_transform = transform;
 	if (direction == DIRECTION_RIGHT) {
 		draw_transform.position.x += transform.scale.width;
