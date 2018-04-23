@@ -395,6 +395,14 @@ void game_world::update() {
 						if (bullet.can_destroy_wall) {
 							tile.first->health--;
 							if (tile.first->health < 1) {
+								if (tile.first->type == TILE_SLIME) {
+									for (int s = 0; s < (int)chunk->slime_tiles.size(); s++) {
+										if (tile.first == &chunk->tiles[chunk->slime_tiles[s].i]) {
+											chunk->slime_tiles.erase(chunk->slime_tiles.begin() + s);
+											break;
+										}
+									}
+								}
 								tile.first->type = TILE_BG_TOP;
 								chunk->needs_rendering = true;
 								if (tile.second.x == 0) {
