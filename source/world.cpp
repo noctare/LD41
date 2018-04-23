@@ -320,6 +320,18 @@ void game_world::spawn_objects(world_chunk& chunk) {
 		slime_queens.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
 		slime_queens.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
 	}
+	if (viruses.size() < 2) {
+		int x = -1;
+		int y = -1;
+		do {
+			x = ne::random_int(0, world_chunk::tiles_per_row - 1);
+			y = ne::random_int(0, world_chunk::tiles_per_column - 1);
+		} while (chunk.tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
+		viruses.push_back({});
+		viruses.back().transform.position.xy = chunk.transform.position.xy;
+		viruses.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+		viruses.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+	}
 }
 
 void game_world::update() {
@@ -358,12 +370,12 @@ void game_world::update() {
 	}
 	for (auto& artery : arteries) {
 		artery.update(this);
-		if (player.transform.collides_with(artery.transform)) {
-			player.hurt(1);
-		}
 	}
 	for (auto& zindo_blood : zindo_bloods) {
 		zindo_blood.update(this);
+	}
+	for (auto& virus : viruses) {
+		virus.update(this);
 	}
 	update_items(pills, ITEM_PILL, 5);
 	update_items(injections, ITEM_INJECTION, 2);
@@ -517,8 +529,27 @@ void game_world::draw(const ne::transform3f& view) {
 	for (auto& worm : worm_enemies) {
 		worm.draw();
 	}
+	for (auto& virus : viruses) {
+		virus.draw();
+	}
+	still_quad().bind();
+	textures.bullet.bind();
 	for (auto& bullet : bullets) {
-		if (!bullet.transform.collides_with(view)) {
+		if (bullet.type != BULLET_NORMAL || !bullet.transform.collides_with(view)) {
+			continue;
+		}
+		bullet.draw();
+	}
+	textures.laser.bind();
+	for (auto& bullet : bullets) {
+		if (bullet.type != BULLET_LASER || !bullet.transform.collides_with(view)) {
+			continue;
+		}
+		bullet.draw();
+	}
+	animated_quad().bind();
+	for (auto& bullet : bullets) {
+		if (bullet.type != BULLET_BLOOD || !bullet.transform.collides_with(view)) {
 			continue;
 		}
 		bullet.draw();

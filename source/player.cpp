@@ -73,7 +73,7 @@ void player_object::shoot(game_world* world) {
 	origin.position.y -= bounce / 8.0f;
 	origin.scale.xy = textures.gun[0].size.to<float>();
 
-	bullet_object bullet(origin, angle_to_mouse, true);
+	bullet_object bullet(origin, angle_to_mouse, true, BULLET_NORMAL);
 	bullet.by_player = true;
 	world->bullets.push_back(bullet);
 	last_shot.start();

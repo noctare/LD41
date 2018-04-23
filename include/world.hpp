@@ -109,6 +109,7 @@ public:
 	std::vector<spike_object> spikes;
 	std::vector<artery_object> arteries;
 	std::vector<zindo_blood_object> zindo_bloods;
+	std::vector<virus_object> viruses;
 
 	game_world();
 

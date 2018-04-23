@@ -46,7 +46,7 @@ void game_state::update() {
 	}
 
 	if (world.player.hearts < 1) {
-		game_over = true;
+		//game_over = true;
 	}
 
 	score_label.render(STRING("Score: " << world.player.score));

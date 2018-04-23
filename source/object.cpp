@@ -183,28 +183,38 @@ void game_object::move_forward(game_world* world, float speed) {
 	}
 }
 
-bullet_object::bullet_object(const ne::transform3f& origin, float angle, bool destroy_walls) {
+bullet_object::bullet_object(const ne::transform3f& origin, float angle, bool destroy_walls, int type) : type(type) {
 	can_destroy_wall = destroy_walls;
-	transform.scale.xy = textures.bullet.size.to<float>();
+	if (type == BULLET_NORMAL) {
+		transform.scale.xy = textures.bullet.size.to<float>();
+	} else if (type == BULLET_LASER) {
+		transform.scale.xy = textures.laser.size.to<float>();
+	} else if (type == BULLET_BLOOD) {
+		//transform.scale.xy = textures.blood_bullet.frame_size().to<float>();
+		animation.fps = 10.0f;
+	}
 	transform.position.xy = origin.position.xy + origin.scale.xy / 2.0f - transform.scale.xy / 2.0f;
 	transform.rotation.z = angle;
 	affected_by_collision = false;
 	move_directions = MOVE_DIRECTIONS_360;
+	max_speed = 6.0f;
 }
 
 void bullet_object::update(game_world* world) {
 	game_object::update(world);
-	move_forward(world, 6.0f);
+	move_forward(world, max_speed);
 	if (collision_w || collision_a || collision_s || collision_d) {
 		has_hit_wall = true;
 	}
 }
 
 void bullet_object::draw() {
-	textures.bullet.bind();
 	ne::shader::set_transform(&transform);
-	still_quad().bind();
-	still_quad().draw();
+	if (type == BULLET_BLOOD) {
+		animation.draw();
+	} else {
+		still_quad().draw();
+	}
 }
 
 enemy_blood_object::enemy_blood_object() {
@@ -253,14 +263,14 @@ void enemy_pimple_object::update(game_world* world) {
 		if (timer.milliseconds() > interval_ms * 2) {
 			is_up = false;
 		} else if (timer.milliseconds() > interval_ms && can_shoot) {
-			world->bullets.push_back({ transform, ne::deg_to_rad(0.0f), false });
-			world->bullets.push_back({ transform, ne::deg_to_rad(45.0f), false });
-			world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false });
-			world->bullets.push_back({ transform, ne::deg_to_rad(135.0f), false });
-			world->bullets.push_back({ transform, ne::deg_to_rad(180.0f), false });
-			world->bullets.push_back({ transform, ne::deg_to_rad(225.0f), false });
-			world->bullets.push_back({ transform, ne::deg_to_rad(270.0f), false });
-			world->bullets.push_back({ transform, ne::deg_to_rad(315.0f), false });
+			world->bullets.push_back({ transform, ne::deg_to_rad(0.0f), false, BULLET_NORMAL });
+			world->bullets.push_back({ transform, ne::deg_to_rad(45.0f), false, BULLET_NORMAL });
+			world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false, BULLET_NORMAL });
+			world->bullets.push_back({ transform, ne::deg_to_rad(135.0f), false, BULLET_NORMAL });
+			world->bullets.push_back({ transform, ne::deg_to_rad(180.0f), false, BULLET_NORMAL });
+			world->bullets.push_back({ transform, ne::deg_to_rad(225.0f), false, BULLET_NORMAL });
+			world->bullets.push_back({ transform, ne::deg_to_rad(270.0f), false, BULLET_NORMAL });
+			world->bullets.push_back({ transform, ne::deg_to_rad(315.0f), false, BULLET_NORMAL });
 			can_shoot = false;
 		}
 	} else {
@@ -483,12 +493,47 @@ zindo_blood_object::zindo_blood_object() {
 
 void zindo_blood_object::update(game_world* world) {
 	if (animation.frame > 3 && last_shot.milliseconds() > 1000) {
-		world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false });
+		world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false, BULLET_NORMAL });
 		last_shot.start();
 	}
 }
 
 void zindo_blood_object::draw() {
 	ne::shader::set_transform(&transform);
+	animation.draw();
+}
+
+virus_object::virus_object() {
+	animation.fps = 5.0f;
+	transform.scale.xy = textures.virus.frame_size().to<float>();
+}
+
+void virus_object::update(game_world* world) {
+	angle += 0.1f;
+	if (angle >= 360.0f) {
+		angle = 0.0f;
+	}
+	ne::transform3f origin = transform;
+	origin.position.y -= 16.0f;
+	world->bullets.push_back({ origin, ne::deg_to_rad(angle), false, BULLET_LASER });
+	world->bullets.back().max_speed = 16.0f;
+	world->bullets.back().type = BULLET_LASER;
+}
+
+void virus_object::draw() {
+	textures.virus.bind();
+	ne::shader::set_transform(&transform);
+	still_quad().bind();
+	still_quad().draw();
+
+	textures.flame_boost.bind();
+	ne::transform3f flame_transform = transform;
+	flame_transform.scale.xy = textures.flame_boost.frame_size().to<float>();
+	
+	flame_transform.position.x += transform.scale.width / 2.0f - flame_transform.scale.width / 2.0f;
+	flame_transform.position.y += transform.scale.height - flame_transform.scale.height + 4.0f;
+
+	ne::shader::set_transform(&flame_transform);
+	animated_quad().bind();
 	animation.draw();
 }

@@ -36,6 +36,7 @@ public:
 	ne::texture virus;
 	ne::texture zindo_blood;
 	ne::texture artery;
+	ne::texture laser;
 
 	void initialize();
 

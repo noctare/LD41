@@ -81,17 +81,26 @@ protected:
 
 };
 
+#define BULLET_NORMAL 0
+#define BULLET_LASER  1
+#define BULLET_BLOOD  2
+
 class bullet_object : public game_object {
 public:
 
 	bool has_hit_wall = false;
 	bool can_destroy_wall = false;
 	bool by_player = false;
+	int type = BULLET_NORMAL;
 
-	bullet_object(const ne::transform3f& origin, float angle, bool destroy_walls);
+	bullet_object(const ne::transform3f& origin, float angle, bool destroy_walls, int type);
 
 	void update(game_world* world);
 	void draw();
+
+private:
+
+	ne::sprite_animation animation;
 
 };
 
@@ -220,5 +229,20 @@ private:
 
 	ne::sprite_animation animation;
 	ne::timer last_shot;
+
+};
+
+class virus_object : public game_object {
+public:
+
+	virus_object();
+
+	void update(game_world* world);
+	void draw();
+
+private:
+
+	ne::sprite_animation animation;
+	float angle = 0.0f;
 
 };
