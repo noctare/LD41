@@ -140,6 +140,13 @@ private:
 
 };
 
+class enemy_slime_queen_object : public game_object {
+public:
+
+
+
+};
+
 class item_object : public game_object {
 public:
 	

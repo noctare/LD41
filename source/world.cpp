@@ -50,7 +50,7 @@ void world_chunk::draw_slime() {
 			continue;
 		}
 		draw_transform.position.xy = transform.position.xy;
-		draw_transform.position.x += (float)(x * tile_pixel_size);
+		draw_transform.position.x += (float)(x * tile_pixel_size) + 2.0f;
 		draw_transform.position.y += (float)((y + 1) * tile_pixel_size) - 1.0f;
 		draw_transform.scale.xy = textures.slime.frame_size().to<float>();
 		ne::shader::set_transform(&draw_transform);
