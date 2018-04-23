@@ -252,17 +252,14 @@ void enemy_pimple_object::update(game_world* world) {
 		if (timer.milliseconds() > 4000) {
 			is_up = false;
 		} else if (timer.milliseconds() > 2000 && can_shoot) {
-			ne::transform3f origin = transform;
-			origin.position.x += origin.scale.width / 2.0f;
-			origin.position.y += origin.scale.height / 2.0f;
-			world->bullets.push_back({ origin, 0, false });
-			world->bullets.push_back({ origin, 45, false });
-			world->bullets.push_back({ origin, 90, false });
-			world->bullets.push_back({ origin, 135, false });
-			world->bullets.push_back({ origin, 180, false });
-			world->bullets.push_back({ origin, 225, false });
-			world->bullets.push_back({ origin, 270, false });
-			world->bullets.push_back({ origin, 315, false });
+			world->bullets.push_back({ transform, ne::deg_to_rad(0.0f), false });
+			world->bullets.push_back({ transform, ne::deg_to_rad(45.0f), false });
+			world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false });
+			world->bullets.push_back({ transform, ne::deg_to_rad(135.0f), false });
+			world->bullets.push_back({ transform, ne::deg_to_rad(180.0f), false });
+			world->bullets.push_back({ transform, ne::deg_to_rad(225.0f), false });
+			world->bullets.push_back({ transform, ne::deg_to_rad(270.0f), false });
+			world->bullets.push_back({ transform, ne::deg_to_rad(315.0f), false });
 			can_shoot = false;
 		}
 	} else {
