@@ -86,7 +86,7 @@ void texture_assets::initialize() {
 	load({ &spike, "spike.png", 8, TEXTURE_IS_ANIMATED });
 	load({ &tapeworm_head, "tapeworm.png" });
 	load({ &tapeworm_body, "tapewormbody.png" });
-	load({ &worm, "worm.png" });
+	load({ &worm, "worm.png", 2, TEXTURE_IS_ANIMATED });
 	load({ &virus, "virus.png" });
 	load({ &zindo_blood, "zindoblood.png", 10, TEXTURE_IS_ANIMATED });
 	load({ &artery, "artery.png", 5 });
