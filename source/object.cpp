@@ -183,7 +183,8 @@ void game_object::move_forward(game_world* world, float speed) {
 	}
 }
 
-bullet_object::bullet_object(const ne::transform3f& origin, float angle) {
+bullet_object::bullet_object(const ne::transform3f& origin, float angle, bool destroy_walls) {
+	can_destroy_wall = destroy_walls;
 	transform.scale.xy = textures.bullet.size.to<float>();
 	transform.position.xy = origin.position.xy + origin.scale.xy / 2.0f - transform.scale.xy / 2.0f;
 	transform.rotation.z = angle;
@@ -206,13 +207,13 @@ void bullet_object::draw() {
 	still_quad().draw();
 }
 
-enemy_object::enemy_object() {
+enemy_blood_object::enemy_blood_object() {
 	transform.scale.xy = textures.blood.size.to<float>();
 	move_directions = MOVE_DIRECTIONS_360;
 	random_bounce = ne::random_float(0.0f, 10000.0f);
 }
 
-void enemy_object::update(game_world* world) {
+void enemy_blood_object::update(game_world* world) {
 	bounce = std::sin((float)ne::ticks() / 200000.0f + random_bounce) * 2.0f;
 	game_object::update(world);
 	collision_w = false;
@@ -224,8 +225,7 @@ void enemy_object::update(game_world* world) {
 	accelerate();
 }
 
-void enemy_object::draw() {
-	textures.blood.bind();
+void enemy_blood_object::draw() {
 	ne::transform3f draw_transform = transform;
 	draw_transform.position.y -= bounce;
 	draw_transform.scale.x += bounce / 8.0f;
@@ -233,8 +233,51 @@ void enemy_object::draw() {
 	draw_transform.position.x -= bounce / 8.0f;
 	draw_transform.position.y -= bounce / 8.0f;
 	ne::shader::set_transform(&draw_transform);
-	still_quad().bind();
 	still_quad().draw();
+}
+
+enemy_pimple_object::enemy_pimple_object() {
+	transform.scale.xy = textures.pimple.frame_size().to<float>();
+	timer.start();
+	first_reset_ms = ne::random_int(2000);
+}
+
+void enemy_pimple_object::update(game_world* world) {
+	if (first_reset_ms > 0 && timer.milliseconds() > first_reset_ms) {
+		timer.start();
+		first_reset_ms = -1;
+		return;
+	}
+	if (is_up) {
+		if (timer.milliseconds() > 4000) {
+			is_up = false;
+		} else if (timer.milliseconds() > 2000 && can_shoot) {
+			ne::transform3f origin = transform;
+			origin.position.x += origin.scale.width / 2.0f;
+			origin.position.y += origin.scale.height / 2.0f;
+			world->bullets.push_back({ origin, 0, false });
+			world->bullets.push_back({ origin, 45, false });
+			world->bullets.push_back({ origin, 90, false });
+			world->bullets.push_back({ origin, 135, false });
+			world->bullets.push_back({ origin, 180, false });
+			world->bullets.push_back({ origin, 225, false });
+			world->bullets.push_back({ origin, 270, false });
+			world->bullets.push_back({ origin, 315, false });
+			can_shoot = false;
+		}
+	} else {
+		if (timer.milliseconds() > 8000) {
+			is_up = true;
+			can_shoot = true;
+			timer.start();
+		}
+	}
+}
+
+void enemy_pimple_object::draw() {
+	ne::shader::set_transform(&transform);
+	animation.frame = (is_up ? 0 : 1);
+	animation.draw(false);
 }
 
 item_object::item_object() {

@@ -42,7 +42,6 @@ void player_object::draw() {
 	draw_transform.position.x -= bounce / 8.0f;
 	draw_transform.position.y -= bounce / 8.0f;
 	ne::shader::set_transform(&draw_transform);
-	still_quad().bind();
 	still_quad().draw();
 
 	float angle = ne::rad_to_deg(angle_to_mouse);
@@ -71,6 +70,8 @@ void player_object::shoot(game_world* world) {
 	origin.position.y -= bounce / 8.0f;
 	origin.scale.xy = textures.gun[0].size.to<float>();
 
-	world->bullets.push_back({ origin, angle_to_mouse });
+	bullet_object bullet(origin, angle_to_mouse, true);
+	bullet.by_player = true;
+	world->bullets.push_back(bullet);
 	last_shot.start();
 }

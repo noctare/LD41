@@ -2,8 +2,6 @@
 
 #include "object.hpp"
 
-#include <timer.hpp>
-
 class player_object : public game_object {
 public:
 

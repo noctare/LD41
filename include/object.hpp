@@ -1,6 +1,8 @@
 #pragma once
 
 #include <transform.hpp>
+#include <graphics.hpp>
+#include <timer.hpp>
 
 class game_world;
 
@@ -44,6 +46,7 @@ protected:
 	int move_directions = MOVE_DIRECTIONS_8;
 
 	float bounce = 0.0f;
+	float random_bounce = 0.0f;
 	
 	float acceleration = 0.1f;
 	float speed = 0.0f;
@@ -81,25 +84,42 @@ class bullet_object : public game_object {
 public:
 
 	bool has_hit_wall = false;
+	bool can_destroy_wall = false;
+	bool by_player = false;
 
-	bullet_object(const ne::transform3f& origin, float angle);
+	bullet_object(const ne::transform3f& origin, float angle, bool destroy_walls);
 
 	void update(game_world* world);
 	void draw();
 
 };
 
-class enemy_object : public game_object {
+class enemy_blood_object : public game_object {
 public:
 
-	enemy_object();
+	enemy_blood_object();
+
+	void update(game_world* world);
+	void draw();
+
+};
+
+class enemy_pimple_object : public game_object {
+public:
+
+	bool is_up = false;
+
+	enemy_pimple_object();
 
 	void update(game_world* world);
 	void draw();
 
 private:
 
-	float random_bounce = 0.0f;
+	ne::sprite_animation animation;
+	ne::timer timer;
+	bool can_shoot = false;
+	int64 first_reset_ms = 0;
 
 };
 
@@ -110,9 +130,5 @@ public:
 
 	void update(game_world* world);
 	void draw();
-
-private:
-
-	float random_bounce = 0.0f;
 
 };

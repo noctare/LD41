@@ -236,17 +236,21 @@ void game_world::update_items(std::vector<item_object>& items, int type, int max
 
 void game_world::update() {
 	player.update(this);
-	for (int i = 0; i < (int)enemies.size(); i++) {
-		auto& enemy = enemies[i];
-		enemy.update(this);
-		if (enemy.transform.distance_to(player.transform) > 512.0f) {
-			enemies.erase(enemies.begin() + i);
+	for (int i = 0; i < (int)blood_enemies.size(); i++) {
+		auto& blood = blood_enemies[i];
+		blood.update(this);
+		if (blood.transform.distance_to(player.transform) > 512.0f) {
+			blood_enemies.erase(blood_enemies.begin() + i);
 			i--;
 		}
 	}
+	for (int i = 0; i < (int)pimple_enemies.size(); i++) {
+		auto& pimple = pimple_enemies[i];
+		pimple.update(this);
+	}
 	update_items(pills, ITEM_PILL, 5);
 	update_items(injections, ITEM_INJECTION, 2);
-	if (enemies.size() < 10) {
+	if (blood_enemies.size() < 10) {
 		tile_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
 		if (player_chunk) {
 			int x = -1;
@@ -255,50 +259,65 @@ void game_world::update() {
 				x = ne::random_int(0, base_chunk::tiles_per_row - 1);
 				y = ne::random_int(0, base_chunk::tiles_per_column - 1);
 			} while (player_chunk->tiles[y * base_chunk::tiles_per_row + x] == TILE_WALL);
-			enemies.push_back({});
-			enemies.back().transform.position.xy = player_chunk->transform.position.xy;
-			enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
-			enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
+			blood_enemies.push_back({});
+			blood_enemies.back().transform.position.xy = player_chunk->transform.position.xy;
+			blood_enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
+			blood_enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
 		}
 	}
 	for (int i = 0; i < (int)bullets.size(); i++) {
 		auto& bullet = bullets[i];
 		bullet.update(this);
+		bool destroy_i = false;
+		if (!bullet.by_player) {
+			if (bullet.transform.collides_with(player.transform)) {
+				player.hearts--;
+				destroy_i = true;
+				bullet.has_hit_wall = false; // just a quickfix to avoid bullets breaking wall
+			}
+		}
 		if (bullet.has_hit_wall) {
 			ne::vector2f position = bullet.transform.position.xy + bullet.transform.scale.xy / 2.0f;
 			tile_chunk* chunk = chunk_at_world_position(position);
 			if (chunk) {
 				auto tile = chunk->tile_at_world_position(position);
 				if (tile.first && *tile.first == TILE_WALL) {
-					*tile.first = TILE_BG_TOP;
-					chunk->needs_rendering = true;
-					if (tile.second.x == 0) {
-						tile_chunk* left = at(chunk->index.x - 1, chunk->index.y);
-						if (left) {
-							left->needs_rendering = true;
+					if (bullet.can_destroy_wall) {
+						*tile.first = TILE_BG_TOP;
+						chunk->needs_rendering = true;
+						if (tile.second.x == 0) {
+							tile_chunk* left = at(chunk->index.x - 1, chunk->index.y);
+							if (left) {
+								left->needs_rendering = true;
+							}
+						} else if (tile.second.x == base_chunk::tiles_per_row - 1) {
+							tile_chunk* right = at(chunk->index.x + 1, chunk->index.y);
+							if (right) {
+								right->needs_rendering = true;
+							}
 						}
-					} else if (tile.second.x == base_chunk::tiles_per_row - 1) {
-						tile_chunk* right = at(chunk->index.x + 1, chunk->index.y);
-						if (right) {
-							right->needs_rendering = true;
+						if (tile.second.y == 0) {
+							tile_chunk* up = at(chunk->index.x, chunk->index.y - 1);
+							if (up) {
+								up->needs_rendering = true;
+							}
+						} else if (tile.second.y == base_chunk::tiles_per_column - 1) {
+							tile_chunk* down = at(chunk->index.x, chunk->index.y + 1);
+							if (down) {
+								down->needs_rendering = true;
+							}
+						}
+						if (bullet.by_player) {
+							player.score++;
 						}
 					}
-					if (tile.second.y == 0) {
-						tile_chunk* up = at(chunk->index.x, chunk->index.y - 1);
-						if (up) {
-							up->needs_rendering = true;
-						}
-					} else if (tile.second.y == base_chunk::tiles_per_column - 1) {
-						tile_chunk* down = at(chunk->index.x, chunk->index.y + 1);
-						if (down) {
-							down->needs_rendering = true;
-						}
-					}
-					player.score++;
-					bullets.erase(bullets.begin() + i);
-					i--;
+					destroy_i = true;
 				}
 			}
+		}
+		if (destroy_i) {
+			bullets.erase(bullets.begin() + i);
+			i--;
 		}
 	}
 }
@@ -312,12 +331,19 @@ void game_world::draw(const ne::transform3f& view) {
 			chunk.draw();
 		}
 	}
-	player.draw();
-	for (auto& enemy : enemies) {
-		enemy.draw();
+	textures.pimple.bind();
+	animated_quad().bind();
+	for (auto& pimple : pimple_enemies) {
+		pimple.draw();
 	}
 	for (auto& bullet : bullets) {
 		bullet.draw();
+	}
+	still_quad().bind();
+	player.draw();
+	textures.blood.bind();
+	for (auto& blood : blood_enemies) {
+		blood.draw();
 	}
 	textures.bones.bind();
 	for (auto& chunk : object_chunks) {
@@ -449,6 +475,15 @@ void world_generator::normal(const ne::vector2i& index) {
 				};
 				bone.type = type;
 				object_chunk.bones.push_back(bone);
+				continue;
+			}
+		}
+		if (chunk.tiles[i] != TILE_WALL) {
+			if (ne::random_chance(0.003f)) {
+				world->pimple_enemies.push_back({});
+				world->pimple_enemies.back().transform.position.xy = chunk.transform.position.xy;
+				world->pimple_enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
+				world->pimple_enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
 			}
 		}
 	}

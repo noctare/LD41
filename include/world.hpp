@@ -80,8 +80,8 @@ public:
 class game_world {
 public:
 
-	static const int chunks_per_row = 16;
-	static const int chunks_per_column = 16;
+	static const int chunks_per_row = 32;
+	static const int chunks_per_column = 32;
 	static const int total_chunks = chunks_per_row * chunks_per_column;
 
 	game_state* game = nullptr;
@@ -90,7 +90,8 @@ public:
 	object_chunk object_chunks[total_chunks];
 
 	player_object player;
-	std::vector<enemy_object> enemies;
+	std::vector<enemy_blood_object> blood_enemies;
+	std::vector<enemy_pimple_object> pimple_enemies;
 	std::vector<bullet_object> bullets;
 	std::vector<item_object> pills;
 	std::vector<item_object> injections;
