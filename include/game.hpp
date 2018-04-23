@@ -13,6 +13,7 @@ public:
 
 	ne::font_text score_label;
 	ne::font_text game_over_label;
+	ne::font_text press_r_label;
 
 	ne::ortho_camera camera;
 	ne::ortho_camera ui_camera;

@@ -36,6 +36,8 @@ game_state::game_state() {
 	score_label.font = &fonts.hud;
 	game_over_label.font = &fonts.game_over;
 	game_over_label.render("Game over!");
+	press_r_label.font = &fonts.game_over;
+	press_r_label.render("Press 'R' to reset");
 }
 
 game_state::~game_state() {
@@ -62,7 +64,10 @@ void game_state::update() {
 	score_label.transform.position.y = 16.0f;
 
 	game_over_label.transform.position.x = ui_camera.width() / 2.0f - game_over_label.transform.scale.width / 2.0f;
-	game_over_label.transform.position.y = ui_camera.height() / 2.0f - game_over_label.transform.scale.height / 2.0f;
+	game_over_label.transform.position.y = ui_camera.height() / 2.0f - game_over_label.transform.scale.height / 2.0f - 32.0f;
+
+	press_r_label.transform.position.x = ui_camera.width() / 2.0f - press_r_label.transform.scale.width / 2.0f;
+	press_r_label.transform.position.y = ui_camera.height() / 2.0f - press_r_label.transform.scale.height / 2.0f + 32.0f;
 
 	debug.set(&fonts.debug, STRING(
 		"Delta " << ne::delta() <<
@@ -103,6 +108,7 @@ void game_state::draw() {
 	// Game over?
 	if (game_over) {
 		game_over_label.draw();
+		press_r_label.draw();
 	}
 }
 
