@@ -16,7 +16,6 @@ public:
 	ne::texture blood;
 	ne::texture bullet;
 	ne::texture cursor;
-	ne::texture bones;
 	ne::texture gun[2];
 	ne::texture sword;
 	ne::texture pill;

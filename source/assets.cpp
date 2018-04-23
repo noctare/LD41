@@ -69,7 +69,6 @@ void texture_assets::initialize() {
 	load({ &blood, "bloodcell.png" });
 	load({ &bullet, "normalbullet.png" });
 	load({ &cursor, "cursor.png" });
-	load({ &bones, "bones.png", 3 });
 	load({ &gun[0], "deserteagle.png" });
 	load({ &gun[1], "deserteagle.png", 1, TEXTURE_FLIP_X });
 	load({ &sword, "oldsword.png" });

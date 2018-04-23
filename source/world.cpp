@@ -7,11 +7,11 @@
 #include <platform.hpp>
 #include <simplex_noise.hpp>
 
-base_chunk::base_chunk() {
+world_chunk::world_chunk() {
 	transform.scale.xy = 1.0f;
 }
 
-void base_chunk::set_index(const ne::vector2i& index) {
+void world_chunk::set_index(const ne::vector2i& index) {
 	this->index = index;
 	transform.position.xy = (index * ne::vector2i{ pixel_width, pixel_height }).to<float>();
 	if (offset_to_grid) {
@@ -20,7 +20,7 @@ void base_chunk::set_index(const ne::vector2i& index) {
 	}
 }
 
-void base_chunk::draw() {
+void world_chunk::draw() {
 	if (needs_rendering) {
 		render();
 	}
@@ -32,7 +32,7 @@ void base_chunk::draw() {
 	shape.draw();
 }
 
-uint32* tile_chunk::at(int x, int y) {
+tile_data* world_chunk::at(int x, int y) {
 	if (x < 0 || y < 0 || x >= tiles_per_row || y >= tiles_per_column) {
 		ne::vector2i offset;
 		if (x < 0) {
@@ -45,7 +45,7 @@ uint32* tile_chunk::at(int x, int y) {
 		} else if (y >= tiles_per_column) {
 			offset.y = 1;
 		}
-		tile_chunk* next = world->at(index.x + offset.x, index.y + offset.y);
+		world_chunk* next = world->at(index.x + offset.x, index.y + offset.y);
 		if (!next) {
 			return nullptr;
 		}
@@ -64,11 +64,11 @@ uint32* tile_chunk::at(int x, int y) {
 	return &tiles[tiles_per_row * y + x];
 }
 
-void tile_chunk::render_tile(int type) {
+void world_chunk::render_tile(int type) {
 	for (int x = 0; x < tiles_per_row; x++) {
 		for (int y = 0; y < tiles_per_column; y++) {
-			uint32 tile = tiles[y * tiles_per_row + x];
-			if (tile != type) {
+			tile_data tile = tiles[y * tiles_per_row + x];
+			if (tile.type != type) {
 				continue;
 			}
 			ne::vector2f position = {
@@ -77,13 +77,13 @@ void tile_chunk::render_tile(int type) {
 			};
 			ne::vector2f size = (float)tile_pixel_size;
 			ne::vector2i tile_uv;
-			if (tile == TILE_BG_BOTTOM) {
+			if (tile.type == TILE_BG_BOTTOM) {
 				tile_uv = { 7, 1 };
-			} else if (tile == TILE_BG_TOP) {
+			} else if (tile.type == TILE_BG_TOP) {
 				tile_uv = { 4, 1 };
-			} else if (tile == TILE_WALL) {
+			} else if (tile.type == TILE_WALL) {
 				tile_uv = { 1, 1 };
-			} else if (tile == TILE_SLIME) {
+			} else if (tile.type == TILE_SLIME) {
 				tile_uv = { 9, 1 };
 			}
 			ne::vector2i uv = tile_uv * tile_pixel_size;
@@ -93,28 +93,28 @@ void tile_chunk::render_tile(int type) {
 			};
 			float step_x = size.x / (float)textures.tiles.size.width;
 			float step_y = size.y / (float)textures.tiles.size.height;
-			if (tile != TILE_BG_BOTTOM) {
-				uint32* up = at(x, y - 1);
-				uint32* down = at(x, y + 1);
-				uint32* left = at(x - 1, y);
-				uint32* right = at(x + 1, y);
-				if (up && *up != tile) {
+			if (tile.type != TILE_BG_BOTTOM) {
+				tile_data* up = at(x, y - 1);
+				tile_data* down = at(x, y + 1);
+				tile_data* left = at(x - 1, y);
+				tile_data* right = at(x + 1, y);
+				if (up && up->type != tile.type) {
 					uv1.y -= step_y / 4.0f;
 					step_y += step_y / 4.0f;
 					position.y -= 4.0f; // 16 / 4
 					size.y += 4.0f;
 				}
-				if (down && *down != tile) {
+				if (down && down->type != tile.type) {
 					step_y += step_y / 4.0f;
 					size.y += 4.0f; // 16 / 4
 				}
-				if (left && *left != tile) {
+				if (left && left->type != tile.type) {
 					uv1.x -= step_x / 4.0f;
 					step_x += step_x / 4.0f;
 					position.x -= 4.0f; // 16 / 4
 					size.x += 4.0f;
 				}
-				if (right && *right != tile) {
+				if (right && right->type != tile.type) {
 					step_x += step_x / 4.0f;
 					size.x += 4.0f; // 16 / 4
 				}
@@ -128,20 +128,62 @@ void tile_chunk::render_tile(int type) {
 	}
 }
 
-void tile_chunk::render() {
+void world_chunk::render_tile_ex(int from, int to) {
+	ne::vector2f size = (float)tile_pixel_size;
+	float step_x = size.x / (float)textures.tiles.size.width;
+	float step_y = size.y / (float)textures.tiles.size.height;
+	for (int x = 0; x < tiles_per_row; x++) {
+		for (int y = 0; y < tiles_per_column; y++) {
+			tile_data tile = tiles[y * tiles_per_row + x];
+			if (tile.extra < from || tile.extra > to) {
+				continue;
+			}
+			ne::vector2f position = {
+				(float)(x * tile_pixel_size),
+				(float)(y * tile_pixel_size)
+			};
+			ne::vector2i tile_uv;
+			switch (tile.extra) {
+			case TILE_EX_BONE_BASE_LEFT: tile_uv = { 12, 3 }; break;
+			case TILE_EX_BONE_BASE_RIGHT: tile_uv = { 13, 3 }; break;
+			case TILE_EX_BONE_TILE_LEFT: tile_uv = { 12, 2 }; break;
+			case TILE_EX_BONE_TILE_RIGHT: tile_uv = { 13, 2 }; break;
+			case TILE_EX_BONE_MID_LEFT: tile_uv = { 12, 1 }; break;
+			case TILE_EX_BONE_MID_RIGHT: tile_uv = { 13, 1 }; break;
+			case TILE_EX_BONE_TOP_LEFT: tile_uv = { 12, 0 }; break;
+			case TILE_EX_BONE_TOP_RIGHT: tile_uv = { 13, 0 }; break;
+			default: break;
+			}
+			ne::vector2i uv = tile_uv * tile_pixel_size;
+			ne::vector2f uv1 = {
+				(float)uv.x / (float)textures.tiles.size.width,
+				(float)uv.y / (float)textures.tiles.size.height
+			};
+			ne::vector2f uv2 = {
+				uv1.x + step_x,
+				uv1.y + step_y
+			};
+			shape.append_quad(position, size, uv1, uv2);
+		}
+	}
+}
+
+void world_chunk::render() {
 	if (shape.exists()) {
 		shape.destroy();
 	}
 	shape.create();
 	render_tile(TILE_BG_BOTTOM);
 	render_tile(TILE_BG_TOP);
+	render_tile_ex(TILE_EX_BONE_BASE_LEFT, TILE_EX_BONE_BASE_RIGHT);
 	render_tile(TILE_WALL);
 	render_tile(TILE_SLIME);
+	render_tile_ex(TILE_EX_BONE_TILE_LEFT, TILE_EX_BONE_TOP_RIGHT);
 	shape.upload();
 	needs_rendering = false;
 }
 
-std::pair<uint32*, ne::vector2i> tile_chunk::tile_at_world_position(const ne::vector2f& position) {
+std::pair<tile_data*, ne::vector2i> world_chunk::tile_at_world_position(const ne::vector2f& position) {
 	ne::vector2i tile_index = position.to<int>();
 	tile_index.x -= index.x * pixel_width;
 	tile_index.y -= index.y * pixel_height;
@@ -152,35 +194,14 @@ std::pair<uint32*, ne::vector2i> tile_chunk::tile_at_world_position(const ne::ve
 	return { at(tile_index.x, tile_index.y), tile_index };
 }
 
-void object_chunk::render() {
-	if (bones.size() == 0) {
-		return;
-	}
-	if (shape.exists()) {
-		shape.destroy();
-	}
-	shape.create();
-	for (auto& bone : bones) {
-		ne::vector2f uv1 = { (float)bone.type / 3.0f, 0.0f };
-		ne::vector2f uv2 = { (float)(bone.type + 1) / 3.0f, 1.0f };
-		bone.transform.scale.xy = textures.bones.frame_size().to<float>();
-		shape.append_quad(bone.transform.position.xy, bone.transform.scale.xy, uv1, uv2);
-	}
-	shape.upload();
-	needs_rendering = false;
-}
-
 game_world::game_world() {
 	ne::set_simplex_noise_seed(std::time(nullptr));
 	generator.world = this;
 	ne::vector2i index;
 	for (int i = 0; i < total_chunks; i++) {
 		auto& chunk = chunks[i];
-		auto& object_chunk = object_chunks[i];
 		chunk.world = this;
 		chunk.set_index(index);
-		object_chunk.world = this;
-		object_chunk.set_index(index);
 		if (index.x == 0 || index.x == chunks_per_row - 1 || index.y == 0 || index.y == chunks_per_column - 1) {
 			generator.border(chunk.index);
 		} else {
@@ -191,8 +212,8 @@ game_world::game_world() {
 			index.x = 0;
 		}
 	}
-	player.transform.position.x = (float)(chunks_per_row * base_chunk::pixel_width) / 2.0f;
-	player.transform.position.y = (float)(chunks_per_column * base_chunk::pixel_height) / 2.0f;
+	player.transform.position.x = (float)(chunks_per_row * world_chunk::pixel_width) / 2.0f;
+	player.transform.position.y = (float)(chunks_per_column * world_chunk::pixel_height) / 2.0f;
 	while (!is_free_at(player.transform.position.xy)) {
 		player.transform.position.x += 20.0f;
 	}
@@ -200,18 +221,18 @@ game_world::game_world() {
 
 void game_world::update_items(std::vector<item_object>& items, int type, int max_of) {
 	if (items.size() < max_of) {
-		tile_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
+		world_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
 		if (player_chunk) {
 			int x = -1;
 			int y = -1;
 			do {
-				x = ne::random_int(0, base_chunk::tiles_per_row - 1);
-				y = ne::random_int(0, base_chunk::tiles_per_column - 1);
-			} while (player_chunk->tiles[y * base_chunk::tiles_per_row + x] == TILE_WALL);
+				x = ne::random_int(0, world_chunk::tiles_per_row - 1);
+				y = ne::random_int(0, world_chunk::tiles_per_column - 1);
+			} while (player_chunk->tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
 			items.push_back({});
 			items.back().transform.position.xy = player_chunk->transform.position.xy;
-			items.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
-			items.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
+			items.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+			items.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
 		}
 	}
 	for (int i = 0; i < (int)items.size(); i++) {
@@ -259,33 +280,33 @@ void game_world::update() {
 	update_items(pills, ITEM_PILL, 5);
 	update_items(injections, ITEM_INJECTION, 2);
 	if (blood_enemies.size() < 10) {
-		tile_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
+		world_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
 		if (player_chunk) {
 			int x = -1;
 			int y = -1;
 			do {
-				x = ne::random_int(0, base_chunk::tiles_per_row - 1);
-				y = ne::random_int(0, base_chunk::tiles_per_column - 1);
-			} while (player_chunk->tiles[y * base_chunk::tiles_per_row + x] == TILE_WALL);
+				x = ne::random_int(0, world_chunk::tiles_per_row - 1);
+				y = ne::random_int(0, world_chunk::tiles_per_column - 1);
+			} while (player_chunk->tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
 			blood_enemies.push_back({});
 			blood_enemies.back().transform.position.xy = player_chunk->transform.position.xy;
-			blood_enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
-			blood_enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
+			blood_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+			blood_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
 		}
 	}
 	if (worm_enemies.size() < 10) {
-		tile_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
+		world_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
 		if (player_chunk) {
 			int x = -1;
 			int y = -1;
 			do {
-				x = ne::random_int(0, base_chunk::tiles_per_row - 1);
-				y = ne::random_int(0, base_chunk::tiles_per_column - 1);
-			} while (player_chunk->tiles[y * base_chunk::tiles_per_row + x] == TILE_WALL);
+				x = ne::random_int(0, world_chunk::tiles_per_row - 1);
+				y = ne::random_int(0, world_chunk::tiles_per_column - 1);
+			} while (player_chunk->tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
 			worm_enemies.push_back({});
 			worm_enemies.back().transform.position.xy = player_chunk->transform.position.xy;
-			worm_enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
-			worm_enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
+			worm_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+			worm_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
 		}
 	}
 	for (int i = 0; i < (int)bullets.size(); i++) {
@@ -301,31 +322,31 @@ void game_world::update() {
 		}
 		if (bullet.has_hit_wall) {
 			ne::vector2f position = bullet.transform.position.xy + bullet.transform.scale.xy / 2.0f;
-			tile_chunk* chunk = chunk_at_world_position(position);
+			world_chunk* chunk = chunk_at_world_position(position);
 			if (chunk) {
 				auto tile = chunk->tile_at_world_position(position);
-				if (tile.first && *tile.first == TILE_WALL) {
+				if (tile.first && tile.first->type == TILE_WALL) {
 					if (bullet.can_destroy_wall) {
-						*tile.first = TILE_BG_TOP;
+						tile.first->type = TILE_BG_TOP;
 						chunk->needs_rendering = true;
 						if (tile.second.x == 0) {
-							tile_chunk* left = at(chunk->index.x - 1, chunk->index.y);
+							world_chunk* left = at(chunk->index.x - 1, chunk->index.y);
 							if (left) {
 								left->needs_rendering = true;
 							}
-						} else if (tile.second.x == base_chunk::tiles_per_row - 1) {
-							tile_chunk* right = at(chunk->index.x + 1, chunk->index.y);
+						} else if (tile.second.x == world_chunk::tiles_per_row - 1) {
+							world_chunk* right = at(chunk->index.x + 1, chunk->index.y);
 							if (right) {
 								right->needs_rendering = true;
 							}
 						}
 						if (tile.second.y == 0) {
-							tile_chunk* up = at(chunk->index.x, chunk->index.y - 1);
+							world_chunk* up = at(chunk->index.x, chunk->index.y - 1);
 							if (up) {
 								up->needs_rendering = true;
 							}
-						} else if (tile.second.y == base_chunk::tiles_per_column - 1) {
-							tile_chunk* down = at(chunk->index.x, chunk->index.y + 1);
+						} else if (tile.second.y == world_chunk::tiles_per_column - 1) {
+							world_chunk* down = at(chunk->index.x, chunk->index.y + 1);
 							if (down) {
 								down->needs_rendering = true;
 							}
@@ -348,7 +369,7 @@ void game_world::update() {
 void game_world::draw(const ne::transform3f& view) {
 	textures.tiles.bind();
 	ne::shader::set_color(1.0f);
-	ne::vector2f chunk_pixel_size = { (float)tile_chunk::pixel_width, (float)tile_chunk::pixel_height };
+	ne::vector2f chunk_pixel_size = { (float)world_chunk::pixel_width, (float)world_chunk::pixel_height };
 	for (auto& chunk : chunks) {
 		if (view.collides_with(chunk.transform.position.xy, chunk_pixel_size)) {
 			chunk.draw();
@@ -372,13 +393,6 @@ void game_world::draw(const ne::transform3f& view) {
 	for (auto& blood : blood_enemies) {
 		blood.draw();
 	}
-	textures.bones.bind();
-	for (auto& chunk : object_chunks) {
-		if (view.collides_with(chunk.transform.position.xy, chunk_pixel_size)) {
-			chunk.draw();
-		}
-	}
-	still_quad().bind();
 	textures.pill.bind();
 	for (auto& pill : pills) {
 		pill.draw();
@@ -405,22 +419,22 @@ void game_world::draw(const ne::transform3f& view) {
 	still_quad().draw();
 }
 
-tile_chunk* game_world::at(int x, int y) {
+world_chunk* game_world::at(int x, int y) {
 	if (x < 0 || y < 0 || x >= chunks_per_row || y >= chunks_per_column) {
 		return nullptr;
 	}
 	return &chunks[y * chunks_per_row + x];
 }
 
-tile_chunk* game_world::chunk_at_world_position(const ne::vector2f& position) {
+world_chunk* game_world::chunk_at_world_position(const ne::vector2f& position) {
 	ne::vector2i chunk_index = position.to<int>();
-	chunk_index.x /= base_chunk::pixel_width;
-	chunk_index.y /= base_chunk::pixel_height;
+	chunk_index.x /= world_chunk::pixel_width;
+	chunk_index.y /= world_chunk::pixel_height;
 	return at(chunk_index.x, chunk_index.y);
 }
 
 bool game_world::is_free_at(const ne::vector2f& position) {
-	tile_chunk* chunk = chunk_at_world_position(position);
+	world_chunk* chunk = chunk_at_world_position(position);
 	if (!chunk) {
 		return false;
 	}
@@ -429,79 +443,81 @@ bool game_world::is_free_at(const ne::vector2f& position) {
 		NE_ERROR("No tile at world position " << position);
 		return false;
 	}
-	if (*tile.first == TILE_WALL) {
+	if (tile.first->type == TILE_WALL) {
 		return false;
 	}
-	// Check bones
-	object_chunk& object_chunk = object_chunks[chunk->index.y * chunks_per_row + chunk->index.x];
-	for (auto& bone : object_chunk.bones) {
-		ne::transform3f collision = bone.transform;
-		if (bone.type == 0) {
-			collision.position.y += 64.0f;
-		} else if (bone.type == 1) {
-			collision.position.y += 48.0f;
-		} else if (bone.type == 2) {
-			collision.position.y += 16.0f;
-		}
-		collision.position.x += (float)(object_chunk.index.x * base_chunk::pixel_width);
-		collision.position.y += (float)(object_chunk.index.y * base_chunk::pixel_height);
-		collision.position.x += 4.0f;
-		collision.scale.x -= 8.0f;
-		if (collision.collides_with(position)) {
-			return false;
-		}
+	if (tile.first->extra >= TILE_EX_BONE_BASE_LEFT && tile.first->extra < TILE_EX_BONE_TOP_RIGHT) {
+		return false;
 	}
-
-	// Free
 	return true;
 }
 
-bool world_generator::add_bone(tile_chunk& chunk, object_chunk& object_chunk, int i) {
-	int x = i % base_chunk::tiles_per_row;
-	int y = i / base_chunk::tiles_per_row;
-	if (y > 5 && x % 2 != 0 && chunk.tiles[i] == TILE_WALL && chunk.tiles[i + 1] == TILE_WALL && ne::random_chance(0.4f)) {
-		int j = i - base_chunk::tiles_per_row;
-		int k = j - base_chunk::tiles_per_row;
-		int l = k - base_chunk::tiles_per_row;
-		bool left = (chunk.tiles[j] != TILE_WALL && chunk.tiles[k] != TILE_WALL && chunk.tiles[l] != TILE_WALL);
-		bool right = (chunk.tiles[j + 1] != TILE_WALL && chunk.tiles[k + 1] != TILE_WALL && chunk.tiles[l + 1] != TILE_WALL);
+bool world_generator::add_bone(world_chunk& chunk, int i) {
+	int x = i % world_chunk::tiles_per_row;
+	int y = i / world_chunk::tiles_per_row;
+	if (y > 5 && x % 2 != 0 && chunk.tiles[i].type == TILE_WALL && chunk.tiles[i + 1].type == TILE_WALL && ne::random_chance(0.4f)) {
+		int j = i - world_chunk::tiles_per_row;
+		int k = j - world_chunk::tiles_per_row;
+		int l = k - world_chunk::tiles_per_row;
+		bool left = (chunk.tiles[j].type != TILE_WALL && chunk.tiles[k].type != TILE_WALL && chunk.tiles[l].type != TILE_WALL);
+		bool right = (chunk.tiles[j + 1].type != TILE_WALL && chunk.tiles[k + 1].type != TILE_WALL && chunk.tiles[l + 1].type != TILE_WALL);
 		if (left && right) {
 			int type = 0;
-			int m = l - base_chunk::tiles_per_row;
-			type += ((chunk.tiles[m] != TILE_WALL && chunk.tiles[m + 1] && ne::random_chance(0.5)) ? 1 : 0);
+			int m = l - world_chunk::tiles_per_row;
+			int n = m - world_chunk::tiles_per_row;
+			type += ((chunk.tiles[m].type != TILE_WALL && chunk.tiles[m + 1].type && ne::random_chance(0.5)) ? 1 : 0);
 			if (type == 1) {
-				int n = m - base_chunk::tiles_per_row;
-				type += ((chunk.tiles[n] != TILE_WALL && chunk.tiles[n + 1] && ne::random_chance(0.5)) ? 1 : 0);
+				type += ((chunk.tiles[n].type != TILE_WALL && chunk.tiles[n + 1].type && ne::random_chance(0.5)) ? 1 : 0);
 			}
-			bone_object bone;
-			bone.transform.position.xy = {
-				(float)x * (float)base_chunk::tile_pixel_size,
-				(float)(y - 7) * (float)base_chunk::tile_pixel_size
-			};
-			bone.type = type;
-			object_chunk.bones.push_back(bone);
+			chunk.tiles[j].extra = TILE_EX_BONE_BASE_LEFT;
+			chunk.tiles[j + 1].extra = TILE_EX_BONE_BASE_RIGHT;
+			chunk.tiles[k].extra = TILE_EX_BONE_TILE_LEFT;
+			chunk.tiles[k + 1].extra = TILE_EX_BONE_TILE_RIGHT;
+			if (type == 0) {
+				chunk.tiles[l].extra = TILE_EX_BONE_MID_LEFT;
+				chunk.tiles[l + 1].extra = TILE_EX_BONE_MID_RIGHT;
+				chunk.tiles[m].extra = TILE_EX_BONE_TOP_LEFT;
+				chunk.tiles[m + 1].extra = TILE_EX_BONE_TOP_RIGHT;
+			} else if (type == 1) {
+				chunk.tiles[l].extra = TILE_EX_BONE_TILE_LEFT;
+				chunk.tiles[l + 1].extra = TILE_EX_BONE_TILE_RIGHT;
+				chunk.tiles[m].extra = TILE_EX_BONE_MID_LEFT;
+				chunk.tiles[m + 1].extra = TILE_EX_BONE_MID_RIGHT;
+				chunk.tiles[n].extra = TILE_EX_BONE_TOP_LEFT;
+				chunk.tiles[n + 1].extra = TILE_EX_BONE_TOP_RIGHT;
+			} else if (type == 2) {
+				chunk.tiles[l].extra = TILE_EX_BONE_TILE_LEFT;
+				chunk.tiles[l + 1].extra = TILE_EX_BONE_TILE_RIGHT;
+				chunk.tiles[m].extra = TILE_EX_BONE_TILE_LEFT;
+				chunk.tiles[m + 1].extra = TILE_EX_BONE_TILE_RIGHT;
+				chunk.tiles[n].extra = TILE_EX_BONE_MID_LEFT;
+				chunk.tiles[n + 1].extra = TILE_EX_BONE_MID_RIGHT;
+				int o = n - world_chunk::tiles_per_row;
+				chunk.tiles[o].extra = TILE_EX_BONE_TOP_LEFT;
+				chunk.tiles[o + 1].extra = TILE_EX_BONE_TOP_RIGHT;
+			}
 			return true;
 		}
 	}
 	return false;
 }
 
-bool world_generator::add_spike(tile_chunk& chunk, object_chunk& object_chunk, int i) {
-	int x = i % base_chunk::tiles_per_row;
-	int y = i / base_chunk::tiles_per_row;
-	if (y > 5 && x % 2 != 0 && chunk.tiles[i] == TILE_WALL && chunk.tiles[i + 1] == TILE_WALL && ne::random_chance(0.6f)) {
-		int j = i - base_chunk::tiles_per_row;
-		int k = j - base_chunk::tiles_per_row;
-		int l = k - base_chunk::tiles_per_row;
-		bool left = (chunk.tiles[j] != TILE_WALL && chunk.tiles[k] != TILE_WALL && chunk.tiles[l] != TILE_WALL);
-		bool right = (chunk.tiles[j + 1] != TILE_WALL && chunk.tiles[k + 1] != TILE_WALL && chunk.tiles[l + 1] != TILE_WALL);
+bool world_generator::add_spike(world_chunk& chunk, int i) {
+	int x = i % world_chunk::tiles_per_row;
+	int y = i / world_chunk::tiles_per_row;
+	if (y > 5 && x % 2 != 0 && chunk.tiles[i].type == TILE_WALL && chunk.tiles[i + 1].type == TILE_WALL && ne::random_chance(0.6f)) {
+		int j = i - world_chunk::tiles_per_row;
+		int k = j - world_chunk::tiles_per_row;
+		int l = k - world_chunk::tiles_per_row;
+		bool left = (chunk.tiles[j].type != TILE_WALL && chunk.tiles[k].type != TILE_WALL && chunk.tiles[l].type != TILE_WALL);
+		bool right = (chunk.tiles[j + 1].type != TILE_WALL && chunk.tiles[k + 1].type != TILE_WALL && chunk.tiles[l + 1].type != TILE_WALL);
 		if (!left || !right) {
 			return false;
 		}
 		spike_object spike;
 		spike.transform.position.xy = {
-			(float)x * (float)base_chunk::tile_pixel_size,
-			((float)y - 4.5f) * (float)base_chunk::tile_pixel_size
+			(float)x * (float)world_chunk::tile_pixel_size,
+			((float)y - 4.5f) * (float)world_chunk::tile_pixel_size
 		};
 		spike.transform.position.x += chunk.transform.position.x;
 		spike.transform.position.y += chunk.transform.position.y;
@@ -512,16 +528,16 @@ bool world_generator::add_spike(tile_chunk& chunk, object_chunk& object_chunk, i
 }
 
 void world_generator::normal(const ne::vector2i& index) {
-	int tile_x = index.x * base_chunk::tiles_per_row;
-	int tile_y = index.y * base_chunk::tiles_per_column;
+	int tile_x = index.x * world_chunk::tiles_per_row;
+	int tile_y = index.y * world_chunk::tiles_per_column;
 	size_t chunk_index = index.y * game_world::chunks_per_row + index.x;
 	if (chunk_index >= world->total_chunks) {
 		return;
 	}
-	tile_chunk& chunk = world->chunks[chunk_index];
-	for (int i = 0; i < base_chunk::total_tiles; i++) {
-		int x = i % base_chunk::tiles_per_row;
-		int y = i / base_chunk::tiles_per_row;
+	world_chunk& chunk = world->chunks[chunk_index];
+	for (int i = 0; i < world_chunk::total_tiles; i++) {
+		int x = i % world_chunk::tiles_per_row;
+		int y = i / world_chunk::tiles_per_row;
 		float noise1 = ne::octave_noise(4, 0.35f, 0.05f, tile_x + x, tile_y + y);
 		int type = TILE_WALL;
 		if (noise1 > 0.0f) {
@@ -535,23 +551,22 @@ void world_generator::normal(const ne::vector2i& index) {
 				type = TILE_WALL;
 			}
 		}
-		chunk.tiles[i] = type;
+		chunk.tiles[i].type = type;
 	}
-	object_chunk& object_chunk = world->object_chunks[chunk_index];
-	for (int i = 0; i < base_chunk::total_tiles; i++) {
-		int x = i % base_chunk::tiles_per_row;
-		int y = i / base_chunk::tiles_per_row;
-		bool added = add_bone(chunk, object_chunk, i);
+	for (int i = 0; i < world_chunk::total_tiles; i++) {
+		int x = i % world_chunk::tiles_per_row;
+		int y = i / world_chunk::tiles_per_row;
+		bool added = add_bone(chunk, i);
 		if (!added) {
-			added = add_spike(chunk, object_chunk, i);
+			added = add_spike(chunk, i);
 		}
 		if (!added) {
-			if (chunk.tiles[i] != TILE_WALL) {
+			if (chunk.tiles[i].type != TILE_WALL) {
 				if (ne::random_chance(0.003f)) {
 					world->pimple_enemies.push_back({});
 					world->pimple_enemies.back().transform.position.xy = chunk.transform.position.xy;
-					world->pimple_enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
-					world->pimple_enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
+					world->pimple_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+					world->pimple_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
 				}
 			}
 		}
@@ -563,8 +578,8 @@ void world_generator::border(const ne::vector2i& index) {
 	if (chunk_index >= world->total_chunks) {
 		return;
 	}
-	tile_chunk& chunk = world->chunks[chunk_index];
-	for (int i = 0; i < tile_chunk::total_tiles; i++) {
-		chunk.tiles[i] = TILE_WALL;
+	world_chunk& chunk = world->chunks[chunk_index];
+	for (int i = 0; i < world_chunk::total_tiles; i++) {
+		chunk.tiles[i].type = TILE_WALL;
 	}
 }

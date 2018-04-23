@@ -10,11 +10,19 @@
 #define TILE_WALL       2
 #define TILE_SLIME      3
 
+#define TILE_EX_BONE_BASE_LEFT    0
+#define TILE_EX_BONE_BASE_RIGHT   1
+#define TILE_EX_BONE_TILE_LEFT    2
+#define TILE_EX_BONE_TILE_RIGHT   3
+#define TILE_EX_BONE_MID_LEFT     4
+#define TILE_EX_BONE_MID_RIGHT    5
+#define TILE_EX_BONE_TOP_LEFT     6
+#define TILE_EX_BONE_TOP_RIGHT    7
+
 class player_object;
 class game_world;
 class game_state;
-class tile_chunk;
-class object_chunk;
+class world_chunk;
 
 class world_generator {
 public:
@@ -22,14 +30,19 @@ public:
 	void normal(const ne::vector2i& index);
 	void border(const ne::vector2i& index);
 
-	bool add_bone(tile_chunk& chunk, object_chunk& object_chunk, int i);
-	bool add_spike(tile_chunk& chunk, object_chunk& object_chunk, int i);
+	bool add_bone(world_chunk& chunk, int i);
+	bool add_spike(world_chunk& chunk, int i);
 
 	game_world* world = nullptr;
 
 };
 
-class base_chunk {
+struct tile_data {
+	uint16 type = 0;
+	int16 extra = -1;
+};
+
+class world_chunk {
 public:
 
 	static const int tile_pixel_size = 16;
@@ -47,23 +60,18 @@ public:
 	bool needs_rendering = true;
 	ne::drawing_shape shape;
 
-	base_chunk();
+	tile_data tiles[total_tiles];
+
+	tile_data* at(int x, int y);
+	void render_tile(int type);
+	void render_tile_ex(int from, int to);
+	void render();
+	std::pair<tile_data*, ne::vector2i> tile_at_world_position(const ne::vector2f& position);
+
+	world_chunk();
 
 	void set_index(const ne::vector2i& index);
 	void draw();
-	virtual void render() = 0;
-
-};
-
-class tile_chunk : public base_chunk {
-public:
-
-	uint32 tiles[total_tiles];
-
-	uint32* at(int x, int y);
-	void render_tile(int type);
-	void render() override;
-	std::pair<uint32*, ne::vector2i> tile_at_world_position(const ne::vector2f& position);
 
 };
 
@@ -71,15 +79,6 @@ class bone_object {
 public:
 	ne::transform3f transform;
 	int type = 0;
-};
-
-class object_chunk : public base_chunk {
-public:
-
-	std::vector<bone_object> bones;
-
-	void render() override;
-
 };
 
 class game_world {
@@ -91,8 +90,7 @@ public:
 
 	game_state* game = nullptr;
 
-	tile_chunk chunks[total_chunks];
-	object_chunk object_chunks[total_chunks];
+	world_chunk chunks[total_chunks];
 
 	player_object player;
 	std::vector<enemy_blood_object> blood_enemies;
@@ -110,8 +108,8 @@ public:
 	void update();
 	void draw(const ne::transform3f& view);
 
-	tile_chunk* at(int x, int y);
-	tile_chunk* chunk_at_world_position(const ne::vector2f& position);
+	world_chunk* at(int x, int y);
+	world_chunk* chunk_at_world_position(const ne::vector2f& position);
 
 	bool is_free_at(const ne::vector2f& position);
 
