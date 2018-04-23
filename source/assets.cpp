@@ -88,9 +88,10 @@ void texture_assets::initialize() {
 	load({ &tapeworm_body, "tapewormbody.png" });
 	load({ &worm, "worm.png" });
 	load({ &virus, "virus.png" });
-	load({ &zindo_blood, "zindobloodglow.png", 10, TEXTURE_IS_ANIMATED });
+	load({ &zindo_blood, "zindoblood.png", 10, TEXTURE_IS_ANIMATED });
 	load({ &artery, "artery.png", 5 });
 	load({ &laser, "laser.png" });
+	load({ &blood_bullet, "bloodbullet.png", 5 });
 
 	spawn_thread();
 	finish();

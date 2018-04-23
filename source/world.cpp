@@ -547,6 +547,7 @@ void game_world::draw(const ne::transform3f& view) {
 		}
 		bullet.draw();
 	}
+	textures.blood_bullet.bind();
 	animated_quad().bind();
 	for (auto& bullet : bullets) {
 		if (bullet.type != BULLET_BLOOD || !bullet.transform.collides_with(view)) {

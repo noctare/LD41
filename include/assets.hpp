@@ -37,6 +37,7 @@ public:
 	ne::texture zindo_blood;
 	ne::texture artery;
 	ne::texture laser;
+	ne::texture blood_bullet;
 
 	void initialize();
 

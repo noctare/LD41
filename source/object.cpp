@@ -190,7 +190,7 @@ bullet_object::bullet_object(const ne::transform3f& origin, float angle, bool de
 	} else if (type == BULLET_LASER) {
 		transform.scale.xy = textures.laser.size.to<float>();
 	} else if (type == BULLET_BLOOD) {
-		//transform.scale.xy = textures.blood_bullet.frame_size().to<float>();
+		transform.scale.xy = textures.blood_bullet.frame_size().to<float>();
 		animation.fps = 10.0f;
 	}
 	transform.position.xy = origin.position.xy + origin.scale.xy / 2.0f - transform.scale.xy / 2.0f;
@@ -263,14 +263,14 @@ void enemy_pimple_object::update(game_world* world) {
 		if (timer.milliseconds() > interval_ms * 2) {
 			is_up = false;
 		} else if (timer.milliseconds() > interval_ms && can_shoot) {
-			world->bullets.push_back({ transform, ne::deg_to_rad(0.0f), false, BULLET_NORMAL });
-			world->bullets.push_back({ transform, ne::deg_to_rad(45.0f), false, BULLET_NORMAL });
-			world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false, BULLET_NORMAL });
-			world->bullets.push_back({ transform, ne::deg_to_rad(135.0f), false, BULLET_NORMAL });
-			world->bullets.push_back({ transform, ne::deg_to_rad(180.0f), false, BULLET_NORMAL });
-			world->bullets.push_back({ transform, ne::deg_to_rad(225.0f), false, BULLET_NORMAL });
-			world->bullets.push_back({ transform, ne::deg_to_rad(270.0f), false, BULLET_NORMAL });
-			world->bullets.push_back({ transform, ne::deg_to_rad(315.0f), false, BULLET_NORMAL });
+			world->bullets.push_back({ transform, ne::deg_to_rad(0.0f), false, BULLET_BLOOD });
+			world->bullets.push_back({ transform, ne::deg_to_rad(45.0f), false, BULLET_BLOOD });
+			world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false, BULLET_BLOOD });
+			world->bullets.push_back({ transform, ne::deg_to_rad(135.0f), false, BULLET_BLOOD });
+			world->bullets.push_back({ transform, ne::deg_to_rad(180.0f), false, BULLET_BLOOD });
+			world->bullets.push_back({ transform, ne::deg_to_rad(225.0f), false, BULLET_BLOOD });
+			world->bullets.push_back({ transform, ne::deg_to_rad(270.0f), false, BULLET_BLOOD });
+			world->bullets.push_back({ transform, ne::deg_to_rad(315.0f), false, BULLET_BLOOD });
 			can_shoot = false;
 		}
 	} else {
@@ -493,7 +493,7 @@ zindo_blood_object::zindo_blood_object() {
 
 void zindo_blood_object::update(game_world* world) {
 	if (animation.frame > 3 && last_shot.milliseconds() > 1000) {
-		world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false, BULLET_NORMAL });
+		world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false, BULLET_BLOOD });
 		last_shot.start();
 	}
 }
