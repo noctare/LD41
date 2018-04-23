@@ -30,5 +30,6 @@ private:
 
 	ne::timer last_shot;
 	int64 shoot_interval_ms = 250;
+	ne::sprite_animation animation;
 
 };
