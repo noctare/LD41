@@ -75,6 +75,26 @@ void texture_assets::initialize() {
 	load({ &sword, "oldsword.png" });
 	load({ &pill, "pill.png" });
 	load({ &injection, "injection.png" });
+	load({ &heart, "heart_icon.png" });
+	load({ &flame_boost, "flameboost.png", 4, TEXTURE_IS_ANIMATED });
+	load({ &mace, "mace.png" });
+	load({ &eye_boss, "eyeboss.png" });
+	load({ &neurons, "neurons.png", 2 });
+	load({ &pimple, "pimple.png", 2 });
+	load({ &queen_slime, "queenslime.png" });
+	load({ &slime, "slime.png" });
+	load({ &slime_drop, "slimedrop.png", 10, TEXTURE_IS_ANIMATED });
+	load({ &spike, "spike.png", 8, TEXTURE_IS_ANIMATED });
+	load({ &tapeworm_head, "tapeworm.png" });
+	load({ &tapeworm_body, "tapewormbody.png" });
+	load({ &worm, "worm.png" });
+	load({ &virus, "virus.png" });
+	load({ &zindo_blood, "zindobloodglow.png", 10, TEXTURE_IS_ANIMATED });
+	load({ &artery[0], "artery1.png" });
+	load({ &artery[1], "artery2.png" });
+	load({ &artery[2], "artery3.png" });
+	load({ &artery[3], "artery4.png" });
+	load({ &artery[4], "artery5.png" });
 
 	spawn_thread();
 	finish();
@@ -82,6 +102,7 @@ void texture_assets::initialize() {
 
 void font_assets::initialize() {
 	root("assets/fonts");
+	load({ &big, "leo.ttf", 48, false });
 	load({ &hud, "leo.ttf", 36, false });
 	load({ &button, "leo.ttf", 20, false });
 	load({ &debug, "leo.ttf", 16, false });

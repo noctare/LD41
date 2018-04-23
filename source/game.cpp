@@ -24,6 +24,8 @@ game_state::game_state() {
 	});
 
 	score_label.font = &fonts.hud;
+	game_over_label.font = &fonts.big;
+	game_over_label.render("Game over!");
 }
 
 game_state::~game_state() {
@@ -37,11 +39,20 @@ void game_state::update() {
 	camera.target = &world.player.transform;
 	camera.update();
 
-	world.update();
+	if (!game_over) {
+		world.update();
+	}
+
+	if (world.player.hearts < 1) {
+		game_over = true;
+	}
 
 	score_label.render(STRING("Score: " << world.player.score));
-	score_label.transform.position.x = ui_camera.x() + ui_camera.width() / 2.0f - score_label.transform.scale.width / 2.0f;
-	score_label.transform.position.y = ui_camera.y() + 16.0f;
+	score_label.transform.position.x = ui_camera.width() / 2.0f - score_label.transform.scale.width / 2.0f;
+	score_label.transform.position.y = 16.0f;
+
+	game_over_label.transform.position.x = ui_camera.width() / 2.0f - game_over_label.transform.scale.width / 2.0f;
+	game_over_label.transform.position.y = ui_camera.height() / 2.0f - game_over_label.transform.scale.height / 2.0f;
 
 	debug.set(&fonts.debug, STRING(
 		"Delta " << ne::delta() <<
@@ -65,8 +76,24 @@ void game_state::draw() {
 	view.scale.xy = ui_camera.size();
 	ne::shader::set_color(1.0f);
 	still_quad().bind();
-	score_label.draw();
 	debug.draw(view);
+	// Score
+	score_label.draw();
+	// Hearts
+	textures.heart.bind();
+	ne::transform3f heart;
+	heart.scale.xy = textures.heart.size.to<float>() * 6.0f;
+	heart.position.x = ui_camera.width() / 2.0f - ((float)world.player.hearts * (heart.scale.width + 8.0f)) / 2.0f;
+	heart.position.y = 96.0f;
+	for (int i = 0; i < world.player.hearts; i++) {
+		ne::shader::set_transform(&heart);
+		still_quad().draw();
+		heart.position.x += heart.scale.width + 8.0f;
+	}
+	// Game over?
+	if (game_over) {
+		game_over_label.draw();
+	}
 }
 
 ne::drawing_shape& still_quad() {

@@ -236,3 +236,23 @@ void enemy_object::draw() {
 	still_quad().bind();
 	still_quad().draw();
 }
+
+item_object::item_object() {
+	random_bounce = ne::random_float(0.0f, 10000.0f);
+}
+
+void item_object::update(game_world* world) {
+	bounce = std::sin((float)ne::ticks() / 200000.0f + random_bounce) * 2.0f;
+}
+
+void item_object::draw() {
+	transform.scale.xy = ne::texture::bound()->size.to<float>();
+	ne::transform3f draw_transform = transform;
+	draw_transform.position.y -= bounce;
+	draw_transform.scale.x += bounce / 8.0f;
+	draw_transform.scale.y += bounce / 8.0f;
+	draw_transform.position.x -= bounce / 8.0f;
+	draw_transform.position.y -= bounce / 8.0f;
+	ne::shader::set_transform(&draw_transform);
+	still_quad().draw();
+}

@@ -14,6 +14,15 @@ void player_object::update(game_world* world) {
 	if (ne::is_key_down(KEY_SPACE) || ne::is_mouse_button_down(MOUSE_BUTTON_LEFT)) {
 		shoot(world);
 	}
+	if (rush_started.milliseconds() < rush_max_ms) {
+		acceleration = 0.5f;
+		max_speed = 4.0f;
+		slowdown_rate = 0.2f;
+	} else {
+		acceleration = 0.1f;
+		max_speed = 2.0f;
+		slowdown_rate = 0.5f;
+	}
 	bounce = std::sin((float)ne::ticks() / 200000.0f) * 4.0f;
 	w = (ne::is_key_down(KEY_W) || ne::is_key_down(KEY_UP));
 	a = (ne::is_key_down(KEY_A) || ne::is_key_down(KEY_LEFT));

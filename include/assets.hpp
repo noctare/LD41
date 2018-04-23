@@ -21,6 +21,22 @@ public:
 	ne::texture sword;
 	ne::texture pill;
 	ne::texture injection;
+	ne::texture heart;
+	ne::texture flame_boost;
+	ne::texture mace;
+	ne::texture eye_boss;
+	ne::texture neurons;
+	ne::texture pimple;
+	ne::texture queen_slime;
+	ne::texture slime;
+	ne::texture slime_drop;
+	ne::texture spike;
+	ne::texture tapeworm_head;
+	ne::texture tapeworm_body;
+	ne::texture worm;
+	ne::texture virus;
+	ne::texture zindo_blood;
+	ne::texture artery[5];
 
 	void initialize();
 
@@ -29,6 +45,7 @@ public:
 class font_assets : public ne::font_group {
 public:
 
+	ne::font big;
 	ne::font hud;
 	ne::font button;
 	ne::font debug;

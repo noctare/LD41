@@ -10,6 +10,9 @@ class game_world;
 #define MOVE_DIRECTIONS_8    0
 #define MOVE_DIRECTIONS_360  1
 
+#define ITEM_PILL      0
+#define ITEM_INJECTION 1
+
 class game_object {
 public:
 
@@ -90,6 +93,20 @@ class enemy_object : public game_object {
 public:
 
 	enemy_object();
+
+	void update(game_world* world);
+	void draw();
+
+private:
+
+	float random_bounce = 0.0f;
+
+};
+
+class item_object : public game_object {
+public:
+	
+	item_object();
 
 	void update(game_world* world);
 	void draw();

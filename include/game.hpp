@@ -9,7 +9,10 @@
 class game_state : public ne::program_state {
 public:
 
+	bool game_over = false;
+
 	ne::font_text score_label;
+	ne::font_text game_over_label;
 
 	ne::ortho_camera camera;
 	ne::ortho_camera ui_camera;
