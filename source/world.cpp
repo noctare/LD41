@@ -221,7 +221,7 @@ std::pair<tile_data*, ne::vector2i> world_chunk::tile_at_world_position(const ne
 }
 
 game_world::game_world() {
-	ne::set_simplex_noise_seed(std::time(nullptr));
+	ne::set_simplex_noise_seed((uint32)std::time(nullptr));
 	generator.world = this;
 	ne::vector2i index;
 	for (int i = 0; i < total_chunks; i++) {
@@ -246,7 +246,7 @@ game_world::game_world() {
 }
 
 void game_world::update_items(std::vector<item_object>& items, int type, int max_of) {
-	if (items.size() < max_of) {
+	if ((int)items.size() < max_of) {
 		world_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
 		if (player_chunk) {
 			int x = -1;
@@ -353,6 +353,12 @@ void game_world::update() {
 	for (auto& spike : spikes) {
 		spike.update(this);
 		if (player.transform.collides_with(spike.transform)) {
+			player.hurt(1);
+		}
+	}
+	for (auto& artery : arteries) {
+		artery.update(this);
+		if (player.transform.collides_with(artery.transform)) {
 			player.hurt(1);
 		}
 	}
@@ -544,6 +550,13 @@ void game_world::draw(const ne::transform3f& view) {
 		}
 		spike.draw();
 	}
+	textures.artery.bind();
+	for (auto& artery : arteries) {
+		if (!artery.transform.collides_with(view)) {
+			continue;
+		}
+		artery.draw();
+	}
 	still_quad().bind();
 	// Draw cursor:
 	ne::vector2i mouse = game->camera.mouse().to<int>();
@@ -692,12 +705,12 @@ void world_generator::normal(const ne::vector2i& index) {
 	for (int i = 0; i < world_chunk::total_tiles; i++) {
 		int x = i % world_chunk::tiles_per_row;
 		int y = i / world_chunk::tiles_per_row;
-		float noise1 = ne::octave_noise(4, 0.35f, 0.05f, tile_x + x, tile_y + y);
+		float noise1 = ne::octave_noise(4.0f, 0.35f, 0.05f, tile_x + x, tile_y + y);
 		int type = TILE_WALL;
 		if (noise1 > 0.0f) {
 			type = TILE_BG_TOP;
-			float noise2 = ne::octave_noise(4, 0.6f, 0.05f, tile_x + x, tile_y + y);
-			float noise3 = ne::octave_noise(4, 0.5f, 0.05f, -128000 + tile_x + x, -128000 + tile_y + y);
+			float noise2 = ne::octave_noise(4.0f, 0.6f, 0.05f, tile_x + x, tile_y + y);
+			float noise3 = ne::octave_noise(4.0f, 0.5f, 0.05f, -128000 + tile_x + x, -128000 + tile_y + y);
 			if (noise2 > 0.4f) {
 				type = TILE_BG_BOTTOM;
 			}
@@ -705,7 +718,7 @@ void world_generator::normal(const ne::vector2i& index) {
 				type = TILE_WALL;
 			}
 			if (noise2 > 0.31f) { 
-				float noise4 = ne::octave_noise(5, 0.7f, 0.05f, -64000 + tile_x + x, -64000 + tile_y + y);
+				float noise4 = ne::octave_noise(5.0f, 0.7f, 0.05f, -64000 + tile_x + x, -64000 + tile_y + y);
 				if (noise4 > 0.45f) {
 					type = TILE_SLIME;
 				}
@@ -731,6 +744,12 @@ void world_generator::normal(const ne::vector2i& index) {
 					world->pimple_enemies.back().transform.position.xy = chunk.transform.position.xy;
 					world->pimple_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
 					world->pimple_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+				} else if (ne::random_chance(0.005f)) {
+					world->arteries.push_back({});
+					world->arteries.back().type = ne::random_int(4);
+					world->arteries.back().transform.position.xy = chunk.transform.position.xy;
+					world->arteries.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+					world->arteries.back().transform.position.y += (float)(y - 4) * (float)world_chunk::tile_pixel_size;
 				}
 			}
 		}

@@ -89,11 +89,7 @@ void texture_assets::initialize() {
 	load({ &worm, "worm.png" });
 	load({ &virus, "virus.png" });
 	load({ &zindo_blood, "zindobloodglow.png", 10, TEXTURE_IS_ANIMATED });
-	load({ &artery[0], "artery1.png" });
-	load({ &artery[1], "artery2.png" });
-	load({ &artery[2], "artery3.png" });
-	load({ &artery[3], "artery4.png" });
-	load({ &artery[4], "artery5.png" });
+	load({ &artery, "artery.png", 5 });
 
 	spawn_thread();
 	finish();

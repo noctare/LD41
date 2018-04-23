@@ -190,3 +190,20 @@ private:
 	ne::sprite_animation animation;
 
 };
+
+class artery_object : public game_object {
+public:
+
+	int type = 0;
+
+	artery_object();
+
+	void update(game_world* world);
+	void draw();
+
+private:
+
+	ne::sprite_animation animation;
+	bool is_flipped = false;
+
+};

@@ -86,12 +86,6 @@ public:
 
 };
 
-class bone_object {
-public:
-	ne::transform3f transform;
-	int type = 0;
-};
-
 class game_world {
 public:
 
@@ -113,6 +107,7 @@ public:
 	std::vector<item_object> pills;
 	std::vector<item_object> injections;
 	std::vector<spike_object> spikes;
+	std::vector<artery_object> arteries;
 
 	game_world();
 

@@ -452,3 +452,25 @@ void spike_object::draw() {
 	ne::shader::set_transform(&transform);
 	animation.draw();
 }
+
+artery_object::artery_object() {
+	animation.fps = 0.0f;
+	transform.scale.xy = textures.artery.frame_size().to<float>();
+	is_flipped = ne::random_chance(0.45f);
+}
+
+void artery_object::update(game_world* world) {
+	
+}
+
+void artery_object::draw() {
+	ne::transform3f draw_transform = transform;
+	if (is_flipped) {
+		draw_transform.position.x += transform.scale.width;
+		draw_transform.scale.width = -transform.scale.width;
+	}
+	ne::shader::set_transform(&draw_transform);
+	animation.frame = type;
+	animation.sub_frame = (float)type;
+	animation.draw(false);
+}

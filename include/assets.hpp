@@ -35,7 +35,7 @@ public:
 	ne::texture worm;
 	ne::texture virus;
 	ne::texture zindo_blood;
-	ne::texture artery[5];
+	ne::texture artery;
 
 	void initialize();
 
