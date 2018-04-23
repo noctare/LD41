@@ -257,6 +257,33 @@ void game_world::update_items(std::vector<item_object>& items, int type, int max
 	}
 }
 
+void game_world::spawn_objects(world_chunk& chunk) {
+	if (blood_enemies.size() < 10) {
+		int x = -1;
+		int y = -1;
+		do {
+			x = ne::random_int(0, world_chunk::tiles_per_row - 1);
+			y = ne::random_int(0, world_chunk::tiles_per_column - 1);
+		} while (chunk.tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
+		blood_enemies.push_back({});
+		blood_enemies.back().transform.position.xy = chunk.transform.position.xy;
+		blood_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+		blood_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+	}
+	if (worm_enemies.size() < 10) {
+		int x = -1;
+		int y = -1;
+		do {
+			x = ne::random_int(0, world_chunk::tiles_per_row - 1);
+			y = ne::random_int(0, world_chunk::tiles_per_column - 1);
+		} while (chunk.tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
+		worm_enemies.push_back({});
+		worm_enemies.back().transform.position.xy = chunk.transform.position.xy;
+		worm_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+		worm_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+	}
+}
+
 void game_world::update() {
 	player.update(this);
 	for (int i = 0; i < (int)blood_enemies.size(); i++) {
@@ -272,6 +299,9 @@ void game_world::update() {
 	}
 	for (auto& worm : worm_enemies) {
 		worm.update(this);
+		if (player.transform.collides_with(worm.transform)) {
+			player.hurt(1);
+		}
 	}
 	for (auto& spike : spikes) {
 		spike.update(this);
@@ -281,36 +311,17 @@ void game_world::update() {
 	}
 	update_items(pills, ITEM_PILL, 5);
 	update_items(injections, ITEM_INJECTION, 2);
-	if (blood_enemies.size() < 10) {
-		world_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
-		if (player_chunk) {
-			int x = -1;
-			int y = -1;
-			do {
-				x = ne::random_int(0, world_chunk::tiles_per_row - 1);
-				y = ne::random_int(0, world_chunk::tiles_per_column - 1);
-			} while (player_chunk->tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
-			blood_enemies.push_back({});
-			blood_enemies.back().transform.position.xy = player_chunk->transform.position.xy;
-			blood_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
-			blood_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
+
+	world_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
+	if (player_chunk) {
+		auto neighbours = neighbour_chunks(player_chunk->index.x, player_chunk->index.y);
+		for (auto& neighbour : neighbours) {
+			if (neighbour) {
+				spawn_objects(*neighbour);
+			}
 		}
 	}
-	if (worm_enemies.size() < 10) {
-		world_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
-		if (player_chunk) {
-			int x = -1;
-			int y = -1;
-			do {
-				x = ne::random_int(0, world_chunk::tiles_per_row - 1);
-				y = ne::random_int(0, world_chunk::tiles_per_column - 1);
-			} while (player_chunk->tiles[y * world_chunk::tiles_per_row + x].type == TILE_WALL);
-			worm_enemies.push_back({});
-			worm_enemies.back().transform.position.xy = player_chunk->transform.position.xy;
-			worm_enemies.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
-			worm_enemies.back().transform.position.y += (float)y * (float)world_chunk::tile_pixel_size;
-		}
-	}
+
 	for (int i = 0; i < (int)bullets.size(); i++) {
 		auto& bullet = bullets[i];
 		bullet.update(this);
@@ -320,6 +331,17 @@ void game_world::update() {
 				player.hurt(1);
 				destroy_i = true;
 				bullet.has_hit_wall = false; // just a quickfix to avoid bullets breaking wall
+			}
+		} else {
+			for (int j = 0; j < (int)worm_enemies.size(); j++) {
+				enemy_worm_object& worm = worm_enemies[j];
+				if (bullet.transform.collides_with(worm.transform)) {
+					player.score += 5;
+					destroy_i = true;
+					bullet.has_hit_wall = true;
+					worm_enemies.erase(worm_enemies.begin() + j);
+					break;
+				}
 			}
 		}
 		if (bullet.has_hit_wall) {
@@ -426,6 +448,19 @@ world_chunk* game_world::at(int x, int y) {
 		return nullptr;
 	}
 	return &chunks[y * chunks_per_row + x];
+}
+
+std::vector<world_chunk*> game_world::neighbour_chunks(int x, int y) {
+	std::vector<world_chunk*> neighbours;
+	neighbours.push_back(at(x - 1, y - 1));
+	neighbours.push_back(at(x, y - 1));
+	neighbours.push_back(at(x + 1, y - 1));
+	neighbours.push_back(at(x - 1, y));
+	neighbours.push_back(at(x + 1, y));
+	neighbours.push_back(at(x - 1, y + 1));
+	neighbours.push_back(at(x, y + 1));
+	neighbours.push_back(at(x + 1, y + 1));
+	return neighbours;
 }
 
 world_chunk* game_world::chunk_at_world_position(const ne::vector2f& position) {

@@ -105,11 +105,14 @@ public:
 
 	void update_items(std::vector<item_object>& items, int type, int max_of);
 
+	void spawn_objects(world_chunk& chunk);
+
 	void update();
 	void draw(const ne::transform3f& view);
 
 	world_chunk* at(int x, int y);
 	world_chunk* chunk_at_world_position(const ne::vector2f& position);
+	std::vector<world_chunk*> neighbour_chunks(int x, int y);
 
 	bool is_free_at(const ne::vector2f& position);
 
