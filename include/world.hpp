@@ -97,6 +97,7 @@ public:
 	player_object player;
 	std::vector<enemy_blood_object> blood_enemies;
 	std::vector<enemy_pimple_object> pimple_enemies;
+	std::vector<enemy_worm_object> worm_enemies;
 	std::vector<bullet_object> bullets;
 	std::vector<item_object> pills;
 	std::vector<item_object> injections;

@@ -244,9 +244,11 @@ void game_world::update() {
 			i--;
 		}
 	}
-	for (int i = 0; i < (int)pimple_enemies.size(); i++) {
-		auto& pimple = pimple_enemies[i];
+	for (auto& pimple : pimple_enemies) {
 		pimple.update(this);
+	}
+	for (auto& worm : worm_enemies) {
+		worm.update(this);
 	}
 	for (auto& spike : spikes) {
 		spike.update(this);
@@ -269,6 +271,21 @@ void game_world::update() {
 			blood_enemies.back().transform.position.xy = player_chunk->transform.position.xy;
 			blood_enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
 			blood_enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
+		}
+	}
+	if (worm_enemies.size() < 10) {
+		tile_chunk* player_chunk = chunk_at_world_position(player.transform.position.xy);
+		if (player_chunk) {
+			int x = -1;
+			int y = -1;
+			do {
+				x = ne::random_int(0, base_chunk::tiles_per_row - 1);
+				y = ne::random_int(0, base_chunk::tiles_per_column - 1);
+			} while (player_chunk->tiles[y * base_chunk::tiles_per_row + x] == TILE_WALL);
+			worm_enemies.push_back({});
+			worm_enemies.back().transform.position.xy = player_chunk->transform.position.xy;
+			worm_enemies.back().transform.position.x += (float)x * (float)base_chunk::tile_pixel_size;
+			worm_enemies.back().transform.position.y += (float)y * (float)base_chunk::tile_pixel_size;
 		}
 	}
 	for (int i = 0; i < (int)bullets.size(); i++) {
@@ -341,6 +358,10 @@ void game_world::draw(const ne::transform3f& view) {
 	animated_quad().bind();
 	for (auto& pimple : pimple_enemies) {
 		pimple.draw();
+	}
+	textures.worm.bind();
+	for (auto& worm : worm_enemies) {
+		worm.draw();
 	}
 	for (auto& bullet : bullets) {
 		bullet.draw();

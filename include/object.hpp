@@ -123,6 +123,22 @@ private:
 
 };
 
+class enemy_worm_object : public game_object {
+public:
+
+	enemy_worm_object();
+
+	void update(game_world* world);
+	void draw();
+
+private:
+
+	ne::sprite_animation animation;
+	ne::timer last_turn;
+	int64 wait_ms = 0;
+
+};
+
 class item_object : public game_object {
 public:
 	

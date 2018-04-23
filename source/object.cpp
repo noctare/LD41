@@ -277,6 +277,64 @@ void enemy_pimple_object::draw() {
 	animation.draw(false);
 }
 
+enemy_worm_object::enemy_worm_object() {
+	transform.scale.xy = textures.worm.frame_size().to<float>();
+	last_turn.start();
+	acceleration = 0.1f;
+	max_speed = 1.0f;
+}
+
+void enemy_worm_object::update(game_world* world) {
+	if (last_turn.milliseconds() > ne::random_int(1000) + wait_ms) {
+		wait_ms = 0;
+		float angle_to_player = world->player.transform.angle_to(transform);
+		w = false;
+		a = false;
+		s = false;
+		d = false;
+		if (angle_to_player > 45.0f && angle_to_player < 135.0f) {
+			d = true;
+		} else if (angle_to_player > 225.0f && angle_to_player < 315.0f) {
+			a = true;
+		}
+		if (angle_to_player > 135.0f && angle_to_player < 225.0f) {
+			s = true;
+		} else if (angle_to_player < 45.0f || angle_to_player > 315.0f) {
+			w = true;
+		}
+		last_turn.start();
+	}
+	game_object::update(world);
+	if (collision_w) {
+		w = false;
+		s = true;
+		wait_ms = 2000;
+	} else if (collision_s) {
+		w = true;
+		s = false;
+		wait_ms = 2000;
+	}
+	if (collision_a) {
+		d = true;
+		a = false;
+		wait_ms = 2000;
+	} else if (collision_d) {
+		d = false;
+		a = true;
+		wait_ms = 2000;
+	}
+}
+
+void enemy_worm_object::draw() {
+	ne::transform3f draw_transform = transform;
+	if (direction == DIRECTION_RIGHT) {
+		draw_transform.position.x += transform.scale.width;
+		draw_transform.scale.width = -transform.scale.width;
+	}
+	ne::shader::set_transform(&draw_transform);
+	animation.draw();
+}
+
 item_object::item_object() {
 	random_bounce = ne::random_float(0.0f, 10000.0f);
 }
