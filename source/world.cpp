@@ -362,6 +362,9 @@ void game_world::update() {
 			player.hurt(1);
 		}
 	}
+	for (auto& zindo_blood : zindo_bloods) {
+		zindo_blood.update(this);
+	}
 	update_items(pills, ITEM_PILL, 5);
 	update_items(injections, ITEM_INJECTION, 2);
 
@@ -557,6 +560,13 @@ void game_world::draw(const ne::transform3f& view) {
 		}
 		artery.draw();
 	}
+	textures.zindo_blood.bind();
+	for (auto& zindo_blood : zindo_bloods) {
+		if (!zindo_blood.transform.collides_with(view)) {
+			continue;
+		}
+		zindo_blood.draw();
+	}
 	still_quad().bind();
 	// Draw cursor:
 	ne::vector2i mouse = game->camera.mouse().to<int>();
@@ -750,6 +760,24 @@ void world_generator::normal(const ne::vector2i& index) {
 					world->arteries.back().transform.position.xy = chunk.transform.position.xy;
 					world->arteries.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
 					world->arteries.back().transform.position.y += (float)(y - 4) * (float)world_chunk::tile_pixel_size;
+				}
+			} else if (x > 1 && y > 3 && chunk.tiles[i].type == TILE_WALL && chunk.tiles[i + 1].type == TILE_WALL) {
+				int j = i - world_chunk::tiles_per_row;
+				int k = j - world_chunk::tiles_per_row;
+				int l = k - world_chunk::tiles_per_row;
+				int jt1 = chunk.tiles[j].type;
+				int jt2 = chunk.tiles[j + 1].type;
+				int kt1 = chunk.tiles[k].type;
+				int kt2 = chunk.tiles[k + 1].type;
+				int lt1 = chunk.tiles[l].type;
+				int lt2 = chunk.tiles[l + 1].type;
+				if (jt1 != TILE_WALL && jt2 != TILE_WALL && kt1 != TILE_WALL && kt2 != TILE_WALL && lt1 != TILE_WALL && lt2 != TILE_WALL) {
+					if (ne::random_chance(0.1f)) {
+						world->zindo_bloods.push_back({});
+						world->zindo_bloods.back().transform.position.xy = chunk.transform.position.xy;
+						world->zindo_bloods.back().transform.position.x += (float)x * (float)world_chunk::tile_pixel_size;
+						world->zindo_bloods.back().transform.position.y += (float)(y - 3) * (float)world_chunk::tile_pixel_size;
+					}
 				}
 			}
 		}

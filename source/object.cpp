@@ -474,3 +474,21 @@ void artery_object::draw() {
 	animation.sub_frame = (float)type;
 	animation.draw(false);
 }
+
+zindo_blood_object::zindo_blood_object() {
+	animation.fps = 5.0f + ne::random_float(5.0f);
+	transform.scale.xy = textures.artery.frame_size().to<float>();
+	last_shot.start();
+}
+
+void zindo_blood_object::update(game_world* world) {
+	if (animation.frame > 3 && last_shot.milliseconds() > 1000) {
+		world->bullets.push_back({ transform, ne::deg_to_rad(90.0f), false });
+		last_shot.start();
+	}
+}
+
+void zindo_blood_object::draw() {
+	ne::shader::set_transform(&transform);
+	animation.draw();
+}

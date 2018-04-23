@@ -207,3 +207,18 @@ private:
 	bool is_flipped = false;
 
 };
+
+class zindo_blood_object : public game_object {
+public:
+
+	zindo_blood_object();
+
+	void update(game_world* world);
+	void draw();
+
+private:
+
+	ne::sprite_animation animation;
+	ne::timer last_shot;
+
+};
