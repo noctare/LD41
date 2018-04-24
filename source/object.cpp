@@ -237,6 +237,17 @@ void bullet_object::draw() {
 	}
 }
 
+int bullet_object::attack() const {
+	switch (type) {
+	case BULLET_NORMAL: return 1;
+	case BULLET_LASER: return 1;
+	case BULLET_BLOOD: return 1;
+	case BULLET_SHOTGUN: return 3;
+	case BULLET_FLAME: return 1;
+	default: return 1;
+	}
+}
+
 enemy_blood_object::enemy_blood_object() {
 	transform.scale.xy = textures.blood.size.to<float>();
 	move_directions = MOVE_DIRECTIONS_360;
@@ -411,6 +422,7 @@ void enemy_slime_queen_object::update(game_world* world) {
 		slime.transform.position.x += transform.scale.width / 2.0f - 4.0f;
 		slime.transform.position.y += transform.scale.height - 4.0f;
 		world->slime_enemies.push_back(slime);
+		audio.slime.play(15);
 		last_slime_drop.start();
 	}
 }
@@ -460,6 +472,7 @@ void enemy_slime_queen_object::explode(game_world* world) {
 	// Down right
 	slime.hold = { 0, ticks, 0, ticks };
 	world->slime_enemies.push_back(slime);
+	audio.slime.play(50);
 }
 
 item_object::item_object() {
@@ -553,15 +566,20 @@ virus_object::virus_object() {
 	transform.scale.xy = textures.virus.frame_size().to<float>();
 	hearts = 20;
 	waiter.start();
+	made_sound.start();
 }
 
 void virus_object::update(game_world* world) {
 	if (waiter.milliseconds() < 3000) {
 		return;
 	}
-	angle += 0.1f;
+	angle += 0.25f;
 	if (angle >= 360.0f) {
 		angle = 0.0f;
+	}
+	if (made_sound.milliseconds() > 3000 + ne::random_int(3000)) {
+		audio.beam.play(10);
+		made_sound.start();
 	}
 	ne::transform3f origin = transform;
 	origin.position.y -= 16.0f;
@@ -605,5 +623,30 @@ void neuron_object::draw() {
 		return;
 	}
 	ne::shader::set_transform(&transform);
+	still_quad().draw();
+}
+
+eye_boss_object::eye_boss_object() {
+	transform.scale.xy = textures.eye_boss.frame_size().to<float>();
+	hearts = 120;
+}
+
+void eye_boss_object::update(game_world* world) {
+	mace_angle += 0.1f;
+}
+
+void eye_boss_object::draw() {
+	if (should_draw()) {
+		textures.eye_boss.bind();
+		ne::shader::set_transform(&transform);
+		still_quad().draw();
+	}
+	ne::transform3f mace = transform;
+	mace.scale.xy = textures.mace.size.to<float>();
+	mace.position.x += textures.eye_boss.size.to<float>().width - 4.0f;
+	mace.position.y += 16.0f;
+	mace.rotation.z = ne::deg_to_rad(mace_angle);
+	textures.mace.bind();
+	ne::shader::set_transform(&mace);
 	still_quad().draw();
 }

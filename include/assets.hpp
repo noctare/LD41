@@ -77,6 +77,11 @@ public:
 class audio_assets : public ne::music_group {
 public:
 
+	ne::sound bg;
+	ne::sound bullet[3];
+	ne::sound beam;
+	ne::sound slime;
+
 	void initialize();
 
 };

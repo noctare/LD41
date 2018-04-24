@@ -3,8 +3,8 @@
 #include "game.hpp"
 
 menu_state::menu_state() {
+	audio.bg.play(50, -1);
 	play1.label.font = &fonts.button;
-	//play1.label.render("Play");
 	play1.sprite = &textures.button;
 	play1.transform.scale.xy = textures.button.frame_size().to<float>();
 	play1.button_shape = &animated_quad();
@@ -13,7 +13,6 @@ menu_state::menu_state() {
 		ne::swap_state<game_state>(PLAYER_GHOST);
 	});
 	play2.label.font = &fonts.button;
-	//play2.label.render("Play");
 	play2.sprite = &textures.button;
 	play2.transform.scale.xy = textures.button.frame_size().to<float>();
 	play2.button_shape = &animated_quad();

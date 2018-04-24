@@ -10,8 +10,10 @@ class game_state : public ne::program_state {
 public:
 
 	bool game_over = false;
+	int high_score = 0;
 
 	ne::font_text score_label;
+	ne::font_text high_score_label;
 	ne::font_text game_over_label;
 	ne::font_text press_r_label;
 
@@ -24,6 +26,9 @@ public:
 
 	void update() override;
 	void draw() override;
+
+	void save_score();
+	void load_score();
 
 private:
 

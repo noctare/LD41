@@ -108,14 +108,17 @@ void player_object::shoot(game_world* world) {
 		bullet_object bullet(origin, angle_to_mouse, true, BULLET_NORMAL);
 		bullet.by_player = true;
 		world->bullets.push_back(bullet);
+		audio.bullet[1].play(15);
 	} else if (gun == GUN_SHOTGUN) {
 		bullet_object bullet(origin, angle_to_mouse, true, BULLET_SHOTGUN);
 		bullet.by_player = true;
 		world->bullets.push_back(bullet);
+		audio.bullet[1].play(15);
 	} else if (gun == GUN_FLAME) {
 		bullet_object bullet(origin, angle_to_mouse, true, BULLET_FLAME);
 		bullet.by_player = true;
 		world->bullets.push_back(bullet);
+		audio.bullet[2].play(15);
 	}
 
 	last_shot.start();

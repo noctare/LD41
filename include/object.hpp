@@ -111,6 +111,8 @@ public:
 	void update(game_world* world);
 	void draw();
 
+	int attack() const;
+
 private:
 
 	ne::sprite_animation animation;
@@ -258,6 +260,7 @@ private:
 	ne::sprite_animation animation;
 	float angle = 0.0f;
 	ne::timer waiter;
+	ne::timer made_sound;
 
 };
 
@@ -265,6 +268,18 @@ class neuron_object : public game_object {
 public:
 
 	neuron_object();
+
+	void update(game_world* world);
+	void draw();
+
+};
+
+class eye_boss_object : public game_object {
+public:
+
+	float mace_angle = 0.0f;
+
+	eye_boss_object();
 
 	void update(game_world* world);
 	void draw();

@@ -128,5 +128,10 @@ void audio_assets::initialize() {
 	root("assets/music");
 
 	root("assets/sounds");
-	
+	load({ &bg, "bg.ogg" });
+	load({ &bullet[0], "bullet1.ogg" });
+	load({ &bullet[1], "bullet2.ogg" });
+	load({ &bullet[2], "bullet3.ogg" });
+	load({ &beam, "beam.ogg" });
+	load({ &slime, "slime.ogg" });
 }

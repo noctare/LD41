@@ -113,6 +113,7 @@ public:
 	std::vector<zindo_blood_object> zindo_bloods;
 	std::vector<virus_object> viruses;
 	std::vector<neuron_object> neurons;
+	std::vector<eye_boss_object> eye_bosses;
 
 	game_world();
 
